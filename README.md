@@ -1,1 +1,0 @@
-# smart-visitor-management-system
