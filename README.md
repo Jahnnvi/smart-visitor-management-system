@@ -51,28 +51,8 @@ Each role has its own login, dashboard, and permitted actions.
 ---
 
 ## 🗂️ Project Structure
-src/
-├── pages/
-│   ├── admin/
-│   │   ├── PendingRequests.jsx
-│   │   ├── AssignAttendee.jsx
-│   │   └── VisitorLogs.jsx
-│   ├── guest/
-│   │   ├── GuestRequest.jsx
-│   │   └── GuestStatus.jsx
-│   ├── security/
-│   │   ├── GateDashboard.jsx
-│   │   └── VerifyVisitor.jsx
-│   ├── MainLogin.jsx
-│   ├── AdminPage.jsx
-│   ├── GuestPage.jsx
-│   └── SecurityPage.jsx
-│
-├── components/
-│   └── VisitorStatsModal.jsx
-│
-├── App.jsx
-└── index.js
+<img width="337" height="516" alt="image" src="https://github.com/user-attachments/assets/44dbcc16-936e-4d14-9638-c4e879ed9f6b" />
+
 ---
 
 ## 🎨 UI Design
