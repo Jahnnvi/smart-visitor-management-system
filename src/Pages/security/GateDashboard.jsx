@@ -16,7 +16,7 @@ export default function GateDashboard() {
       icon: '👤',
       title: 'On-the-Spot Entry',
       description: 'Register and process parents and campus visitors on arrival',
-      path: '/security/onsite'
+      path: '/security/on-spot-entry'
     },
     {
       id: 3,

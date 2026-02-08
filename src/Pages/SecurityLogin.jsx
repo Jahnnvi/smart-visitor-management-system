@@ -18,7 +18,7 @@ const SecurityLogin = () => {
       setError("Password is required");
       return;
     }
-    navigate("/security");
+    navigate("/security/dashboard");
   };
 
   const pageStyle = {

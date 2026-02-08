@@ -13,6 +13,9 @@ import AssignAttendee from "./Pages/admin/AssignAttendee";
 import VisitorLogs from "./Pages/admin/VisitorLogs";
 import SecurityPage from "./Pages/SecurityPage";
 import GateDashboard from "./Pages/security/GateDashboard";
+import VerifyVisitor from "./Pages/security/VerifyVisitor";
+import OnSpotEntry from "./Pages/security/OnSpotEntry";
+import GateLogs from "./Pages/security/GateLogs";
 
 // const SecurityPage = () => (
 //   <div style={{ padding: "40px", fontFamily: "sans-serif" }}>
@@ -38,6 +41,9 @@ function App() {
         <Route path="/security/login" element={<SecurityLogin />} />
         <Route path="/security" element={<SecurityPage />} />
         <Route path="/security/dashboard" element={<GateDashboard />} />
+        <Route path="/security/verify" element={<VerifyVisitor />} />
+        <Route path="/security/on-spot-entry" element={<OnSpotEntry />} />
+        <Route path="/security/logs" element={<GateLogs />} />
       </Routes>
     </BrowserRouter>
   );
