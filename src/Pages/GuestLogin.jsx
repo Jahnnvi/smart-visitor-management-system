@@ -3,16 +3,31 @@ import { useNavigate } from "react-router-dom";
 
 const GuestLogin = () => {
   const navigate = useNavigate();
-  const [phone, setPhone] = useState("");
+  // const [facultyId, setFacultyId] = useState("");
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  const facultyIdRegex = /^[0-9]{2}[A-Z]{3}[0-9]{4}$/;
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
-    if (!phone.trim()) {
-      setError("Phone number is required");
+    if (!userId.trim()) {
+      setError("User ID is required");
       return;
     }
+    if (!password.trim()) {
+      setError("Password is required");
+      return;
+    }
+    if (!facultyIdRegex.test(userId)) {
+      setError("User ID must be in format: 25MSP8765");
+      return;
+    }
+
+    setError("");
+    
     navigate("/guest");
   };
 
@@ -104,17 +119,29 @@ const GuestLogin = () => {
         <p style={subtitleStyle}>Verify your identity to continue</p>
         <form style={formStyle} onSubmit={handleSubmit}>
           <div style={inputWrapperStyle}>
-            <label style={labelStyle} htmlFor="phone">
-              Phone Number
+            <label style={labelStyle} htmlFor="uid">
+              User ID
             </label>
             <input
-              id="phone"
-              type="tel"
-              placeholder="Enter your phone number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              id="uid"
+              type="text"
+              placeholder="Enter your User ID"
+              value={userId }
+              onChange={(e) => setUserId(e.target.value)}
               style={inputStyle}
-              autoComplete="tel"
+              autoComplete="text"
+            />
+            <label style={labelStyle} htmlFor="password">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={inputStyle}
+              autoComplete="password"
             />
             {error && <span style={errorStyle}>{error}</span>}
           </div>

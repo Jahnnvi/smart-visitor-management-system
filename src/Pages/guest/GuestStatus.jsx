@@ -1,148 +1,87 @@
-import React, { useState } from "react";
+import React from "react";
 
 const GuestStatus = () => {
-  const [phone, setPhone] = useState("");
-  const [error, setError] = useState("");
-  const [result, setResult] = useState(null);
-
-  const getMockStatus = (phoneNum) => {
-    const lastDigit = phoneNum.trim().slice(-1);
-    if (lastDigit === "2" || lastDigit === "5" || lastDigit === "8") return "Approved";
-    if (lastDigit === "3" || lastDigit === "6" || lastDigit === "9") return "Denied";
-    return "Pending";
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
-    setResult(null);
-    if (!phone.trim()) {
-      setError("Phone number is required");
-      return;
-    }
-    const status = getMockStatus(phone);
-    setResult({
+  // Mock requests for the logged-in guest
+  const requests = [
+    {
+      id: "REQ-101",
       guestName: "John Doe",
-      phone: phone.trim(),
       purpose: "Campus tour and admissions meeting",
       visitingDate: "2025-02-15",
-      assignedAttendee: status === "Approved" ? "Dr. Jane Smith" : null,
-      status,
-    });
-  };
+      assignedAttendee: "Dr. Jane Smith",
+      status: "Approved",
+    },
+    {
+      id: "REQ-102",
+      guestName: "John Doe",
+      purpose: "Guest lecture discussion",
+      visitingDate: "2025-02-20",
+      assignedAttendee: null,
+      status: "Pending",
+    },
+    {
+      id: "REQ-103",
+      guestName: "John Doe",
+      purpose: "Vendor meeting",
+      visitingDate: "2025-02-10",
+      assignedAttendee: null,
+      status: "Denied",
+    },
+  ];
+
+  /* ---------- STYLES ---------- */
 
   const pageStyle = {
     minHeight: "100vh",
     backgroundColor: "#FAFCFC",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "24px",
+    padding: "40px 24px",
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
   };
 
-  const cardStyle = {
-    backgroundColor: "#222121",
-    borderRadius: "12px",
-    padding: "40px",
-    width: "100%",
-    maxWidth: "480px",
-    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-    border: "1px solid #E5E4E3",
+  const headerStyle = {
+    maxWidth: "900px",
+    margin: "0 auto 32px",
   };
 
   const titleStyle = {
-    fontSize: "1.75rem",
+    fontSize: "2rem",
     fontWeight: 600,
-    color: "#FAFCFC",
-    marginBottom: "8px",
-    letterSpacing: "-0.02em",
+    color: "#2A2A2A",
+    marginBottom: 6,
   };
 
   const subtitleStyle = {
-    fontSize: "0.95rem",
-    color: "#FAFCFC",
-    opacity: 0.85,
-    marginBottom: "32px",
+    fontSize: "1rem",
+    color: "#2A2A2A",
+    opacity: 0.8,
   };
 
-  const formStyle = {
+  const listStyle = {
+    maxWidth: "900px",
+    margin: "0 auto",
     display: "flex",
     flexDirection: "column",
     gap: "20px",
   };
 
-  const inputWrapperStyle = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-  };
-
-  const labelStyle = {
-    fontSize: "0.9rem",
-    fontWeight: 500,
-    color: "#FAFCFC",
-    opacity: 0.9,
-  };
-
-  const inputStyle = {
-    padding: "12px 16px",
-    fontSize: "1rem",
-    borderRadius: "8px",
-    border: "1px solid #E5E4E3",
-    backgroundColor: "#FAFCFC",
-    color: "#2A2A2A",
-    outline: "none",
-  };
-
-  const buttonStyle = {
-    backgroundColor: "#4CD1D6",
-    color: "#222121",
-    border: "none",
-    padding: "14px 24px",
-    borderRadius: "8px",
-    fontSize: "1rem",
-    fontWeight: 600,
-    cursor: "pointer",
-    marginTop: "8px",
-  };
-
-  const errorStyle = {
-    fontSize: "0.85rem",
-    color: "#E57373",
-  };
-
-  const statusCardStyle = {
-    marginTop: "32px",
+  const cardStyle = {
+    backgroundColor: "#222121",
+    borderRadius: "12px",
     padding: "24px",
-    backgroundColor: "#FAFCFC",
-    borderRadius: "8px",
     border: "1px solid #E5E4E3",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
   };
 
   const rowStyle = {
     display: "flex",
     justifyContent: "space-between",
-    padding: "8px 0",
-    borderBottom: "1px solid #E5E4E3",
+    padding: "6px 0",
     fontSize: "0.95rem",
+    color: "#FAFCFC",
   };
 
-  const rowLastStyle = {
-    ...rowStyle,
-    borderBottom: "none",
-  };
-
-  const labelDarkStyle = {
-    color: "#2A2A2A",
-    fontWeight: 500,
-  };
-
-  const valueDarkStyle = {
-    color: "#2A2A2A",
-    opacity: 0.9,
-    textAlign: "right",
+  const labelStyle = {
+    opacity: 0.75,
   };
 
   const statusBadgeBase = {
@@ -153,86 +92,67 @@ const GuestStatus = () => {
     fontWeight: 600,
   };
 
-  const statusBadgePending = {
-    ...statusBadgeBase,
-    backgroundColor: "#E5E4E3",
-    color: "#2A2A2A",
-  };
-
-  const statusBadgeApproved = {
-    ...statusBadgeBase,
-    backgroundColor: "#4CD1D6",
-    color: "#222121",
-  };
-
-  const statusBadgeDenied = {
-    ...statusBadgeBase,
-    backgroundColor: "#222121",
-    color: "#FAFCFC",
-    opacity: 0.7,
-  };
-
-  const getStatusBadgeStyle = (status) => {
-    if (status === "Approved") return statusBadgeApproved;
-    if (status === "Denied") return statusBadgeDenied;
-    return statusBadgePending;
+  const statusStyles = {
+    Approved: {
+      ...statusBadgeBase,
+      backgroundColor: "#4CD1D6",
+      color: "#222121",
+    },
+    Pending: {
+      ...statusBadgeBase,
+      backgroundColor: "#E5E4E3",
+      color: "#2A2A2A",
+    },
+    Denied: {
+      ...statusBadgeBase,
+      backgroundColor: "#111111",
+      color: "#FAFCFC",
+      opacity: 0.8,
+    },
   };
 
   return (
     <div style={pageStyle}>
-      <div style={cardStyle}>
-        <h1 style={titleStyle}>Request Status</h1>
-        <p style={subtitleStyle}>Check the status of your visit request</p>
-        <form style={formStyle} onSubmit={handleSubmit}>
-          <div style={inputWrapperStyle}>
-            <label style={labelStyle} htmlFor="phone">
-              Phone Number
-            </label>
-            <input
-              id="phone"
-              type="tel"
-              placeholder="Enter your phone number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              style={inputStyle}
-              autoComplete="tel"
-            />
-            {error && <span style={errorStyle}>{error}</span>}
-          </div>
-          <button type="submit" style={buttonStyle}>
-            Check Status
-          </button>
-        </form>
-        {result && (
-          <div style={statusCardStyle}>
+      <div style={headerStyle}>
+        <h1 style={titleStyle}>My Requests</h1>
+        <p style={subtitleStyle}>
+          Track the status of all visit requests you have submitted
+        </p>
+      </div>
+
+      <div style={listStyle}>
+        {requests.map((req) => (
+          <div key={req.id} style={cardStyle}>
             <div style={rowStyle}>
-              <span style={labelDarkStyle}>Guest Name</span>
-              <span style={valueDarkStyle}>{result.guestName}</span>
+              <span style={labelStyle}>Request ID</span>
+              <span>{req.id}</span>
             </div>
+
             <div style={rowStyle}>
-              <span style={labelDarkStyle}>Phone Number</span>
-              <span style={valueDarkStyle}>{result.phone}</span>
+              <span style={labelStyle}>Purpose</span>
+              <span style={{ maxWidth: "55%", textAlign: "right" }}>
+                {req.purpose}
+              </span>
             </div>
+
             <div style={rowStyle}>
-              <span style={labelDarkStyle}>Purpose of Visit</span>
-              <span style={{ ...valueDarkStyle, maxWidth: "55%" }}>{result.purpose}</span>
+              <span style={labelStyle}>Visiting Date</span>
+              <span>{req.visitingDate}</span>
             </div>
-            <div style={rowStyle}>
-              <span style={labelDarkStyle}>Visiting Date</span>
-              <span style={valueDarkStyle}>{result.visitingDate}</span>
-            </div>
-            {result.assignedAttendee && (
+
+            {req.assignedAttendee && (
               <div style={rowStyle}>
-                <span style={labelDarkStyle}>Assigned Attendee</span>
-                <span style={valueDarkStyle}>{result.assignedAttendee}</span>
+                <span style={labelStyle}>Attendee</span>
+                <span>{req.assignedAttendee}</span>
               </div>
             )}
-            <div style={rowLastStyle}>
-              <span style={labelDarkStyle}>Current Status</span>
-              <span style={getStatusBadgeStyle(result.status)}>{result.status}</span>
+
+            <div style={{ ...rowStyle, marginTop: 8 }}>
+              <span style={labelStyle}>Status</span>
+              <span style={statusStyles[req.status]}>{req.status}</span>
             </div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );

@@ -1,47 +1,63 @@
 import React, { useState } from "react";
 
-const GuestRequest = () => {
-  const [formData, setFormData] = useState({
-    fullName: "",
-    phone: "",
-    organization: "",
-    purpose: "",
-    visitingDate: "",
-    expectedTime: "",
-  });
-  const [error, setError] = useState("");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+export default function GuestRequest() {
+  const initialForm = {
+    facultyName: "",
+    facultyEmail: "",
+    facultyId: "",
+    department: "",
+    guestName: "",
+    guestEmail: "",
+    guestPhone: "",
+    purpose: "",
+    visitDate: "",
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
+  const [form, setForm] = useState(initialForm);
+  const [submitted, setSubmitted] = useState([]);
+  const [showNotice, setShowNotice] = useState(false);
 
-    const { fullName, phone, organization, purpose, visitingDate, expectedTime } = formData;
-    if (!fullName.trim() || !phone.trim() || !organization.trim() || !purpose.trim() || !visitingDate || !expectedTime) {
-      setError("All fields are required");
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setForm((p) => ({ ...p, [name]: value }));
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    setShowNotice(false);
+
+    // Basic required field: guestEmail
+    if (!form.guestEmail) {
+      setShowNotice(true);
       return;
     }
 
-    const requestData = {
-      fullName: fullName.trim(),
-      phone: phone.trim(),
-      organization: organization.trim(),
-      purpose: purpose.trim(),
-      visitingDate,
-      expectedTime,
+    const newReq = {
+      guestName: form.guestName || "—",
+      guestEmail: form.guestEmail,
+      visitDate: form.visitDate || "—",
+      status: "Pending Admin Approval",
+      id: Date.now(),
     };
 
-    console.log(requestData);
-    alert("Request submitted successfully");
+    setSubmitted((s) => [newReq, ...s]);
+    setShowNotice(true);
+    setForm(initialForm);
+  }
+
+  // Palette
+  const colors = {
+    bg: "#FAFCFC",
+    card: "#222121",
+    textDark: "#2A2A2A",
+    accent: "#4CD1D6",
+    border: "#E5E4E3",
   };
 
-  const pageStyle = {
+  const page = {
     minHeight: "100vh",
-    backgroundColor: "#FAFCFC",
+    background: colors.bg,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -49,178 +65,101 @@ const GuestRequest = () => {
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
   };
 
-  const cardStyle = {
-    backgroundColor: "#222121",
-    borderRadius: "12px",
-    padding: "40px",
-    width: "100%",
-    maxWidth: "480px",
-    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-    border: "1px solid #E5E4E3",
-  };
-
-  const titleStyle = {
-    fontSize: "1.75rem",
-    fontWeight: 600,
-    color: "#FAFCFC",
-    marginBottom: "8px",
-    letterSpacing: "-0.02em",
-  };
-
-  const subtitleStyle = {
-    fontSize: "0.95rem",
-    color: "#FAFCFC",
-    opacity: 0.85,
-    marginBottom: "32px",
-  };
-
-  const formStyle = {
+  const card = {
+    width: "720px",
+    maxWidth: "95%",
+    background: colors.card,
+    color: colors.bg,
+    borderRadius: "10px",
+    border: `1px solid ${colors.border}`,
+    padding: "18px",
     display: "flex",
     flexDirection: "column",
-    gap: "20px",
   };
 
-  const inputWrapperStyle = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-  };
+  const title = { color: colors.accent, margin: 0, fontSize: "22px" };
+  const subtitle = { color: colors.bg, margin: 0, fontSize: "13px", opacity: 0.95 };
 
-  const labelStyle = {
-    fontSize: "0.9rem",
-    fontWeight: 500,
-    color: "#FAFCFC",
-    opacity: 0.9,
-  };
-
-  const inputStyle = {
-    padding: "12px 16px",
-    fontSize: "1rem",
+  const formBox = {
+    marginTop: "12px",
+    background: colors.bg,
+    color: colors.textDark,
+    padding: "14px",
     borderRadius: "8px",
-    border: "1px solid #E5E4E3",
-    backgroundColor: "#FAFCFC",
-    color: "#2A2A2A",
-    outline: "none",
+    maxHeight: "420px",
+    overflowY: "auto",
+    border: `1px solid ${colors.border}`,
   };
 
-  const textareaStyle = {
-    ...inputStyle,
-    minHeight: "80px",
-    resize: "vertical",
-  };
-
-  const buttonStyle = {
-    backgroundColor: "#4CD1D6",
-    color: "#222121",
-    border: "none",
-    padding: "14px 24px",
-    borderRadius: "8px",
-    fontSize: "1rem",
-    fontWeight: 600,
-    cursor: "pointer",
-    marginTop: "8px",
-  };
-
-  const errorStyle = {
-    fontSize: "0.85rem",
-    color: "#E57373",
-  };
+  const section = { marginBottom: "12px" };
+  const sectionTitle = { color: colors.textDark, fontWeight: 600, marginBottom: "8px" };
+  const row = { display: "flex", gap: "10px", marginBottom: "10px" };
+  const input = { flex: 1, padding: "8px 10px", borderRadius: "6px", border: `1px solid ${colors.border}`, fontSize: "14px" };
+  const textarea = { width: "100%", minHeight: "80px", padding: "8px 10px", borderRadius: "6px", border: `1px solid ${colors.border}`, fontSize: "14px" };
+  const submit = { marginTop: "12px", background: colors.accent, color: colors.card, padding: "10px 14px", borderRadius: "6px", border: "none", fontWeight: 600, cursor: "pointer", alignSelf: "flex-start" };
+  const confirmCard = { marginTop: "14px", background: "#FFFFFF", color: colors.textDark, border: `1px solid ${colors.border}`, padding: "12px", borderRadius: "8px" };
 
   return (
-    <div style={pageStyle}>
-      <div style={cardStyle}>
-        <h1 style={titleStyle}>Visitor Pre-Registration</h1>
-        <p style={subtitleStyle}>Submit your visit request for approval</p>
-        <form style={formStyle} onSubmit={handleSubmit}>
-          <div style={inputWrapperStyle}>
-            <label style={labelStyle} htmlFor="fullName">
-              Full Name
-            </label>
-            <input
-              id="fullName"
-              name="fullName"
-              type="text"
-              placeholder="Enter your full name"
-              value={formData.fullName}
-              onChange={handleChange}
-              style={inputStyle}
-            />
+    <div style={page}>
+      <div style={card}>
+        <div>
+          <h2 style={title}>Invite Guest</h2>
+          <p style={subtitle}>Send request for admin approval</p>
+        </div>
+
+        <form onSubmit={handleSubmit} style={formBox}>
+          <div style={section}>
+            <div style={sectionTitle}>Faculty Details</div>
+            <div style={row}>
+              <input name="facultyName" value={form.facultyName} onChange={handleChange} placeholder="Faculty Name" style={input} />
+              <input name="facultyEmail" type="email" value={form.facultyEmail} onChange={handleChange} placeholder="Faculty Email" style={input} />
+            </div>
+            <div style={row}>
+              <input name="facultyId" value={form.facultyId} onChange={handleChange} placeholder="Faculty ID" style={input} />
+              <input name="department" value={form.department} onChange={handleChange} placeholder="Department" style={input} />
+            </div>
           </div>
-          <div style={inputWrapperStyle}>
-            <label style={labelStyle} htmlFor="phone">
-              Phone Number
-            </label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              placeholder="Enter your phone number"
-              value={formData.phone}
-              onChange={handleChange}
-              style={inputStyle}
-            />
+
+          <div style={section}>
+            <div style={sectionTitle}>Guest Details</div>
+            <div style={row}>
+              <input name="guestName" value={form.guestName} onChange={handleChange} placeholder="Guest Name" style={input} />
+              <input name="guestEmail" type="email" value={form.guestEmail} onChange={handleChange} placeholder="Guest Email (required)" style={input} required />
+            </div>
+            <div style={row}>
+              <input name="guestPhone" value={form.guestPhone} onChange={handleChange} placeholder="Guest Phone Number" style={input} />
+              <input name="visitDate" type="date" value={form.visitDate} onChange={handleChange} style={input} />
+            </div>
+            <div>
+              <textarea name="purpose" value={form.purpose} onChange={handleChange} placeholder="Purpose of Visit" style={textarea} />
+            </div>
+
+            <button type="submit" style={submit}>Send Request</button>
           </div>
-          <div style={inputWrapperStyle}>
-            <label style={labelStyle} htmlFor="organization">
-              Organization / Institution
-            </label>
-            <input
-              id="organization"
-              name="organization"
-              type="text"
-              placeholder="Enter your organization"
-              value={formData.organization}
-              onChange={handleChange}
-              style={inputStyle}
-            />
-          </div>
-          <div style={inputWrapperStyle}>
-            <label style={labelStyle} htmlFor="purpose">
-              Purpose of Visit
-            </label>
-            <textarea
-              id="purpose"
-              name="purpose"
-              placeholder="Describe the purpose of your visit"
-              value={formData.purpose}
-              onChange={handleChange}
-              style={textareaStyle}
-            />
-          </div>
-          <div style={inputWrapperStyle}>
-            <label style={labelStyle} htmlFor="visitingDate">
-              Visiting Date
-            </label>
-            <input
-              id="visitingDate"
-              name="visitingDate"
-              type="date"
-              value={formData.visitingDate}
-              onChange={handleChange}
-              style={inputStyle}
-            />
-          </div>
-          <div style={inputWrapperStyle}>
-            <label style={labelStyle} htmlFor="expectedTime">
-              Expected Time
-            </label>
-            <input
-              id="expectedTime"
-              name="expectedTime"
-              type="time"
-              value={formData.expectedTime}
-              onChange={handleChange}
-              style={inputStyle}
-            />
-          </div>
-          {error && <span style={errorStyle}>{error}</span>}
-          <button type="submit" style={buttonStyle}>
-            Submit Request
-          </button>
         </form>
+
+        <div>
+          {showNotice && submitted.length === 0 && (
+            <div style={confirmCard}>
+              <strong>Notice:</strong>
+              <div style={{ marginTop: 8 }}>Please provide a Guest Email to submit a request.</div>
+            </div>
+          )}
+
+          {submitted.map((s) => (
+            <div key={s.id} style={confirmCard}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontWeight: 700 }}>{s.guestName}</div>
+                <div style={{ color: colors.accent, fontWeight: 700 }}>{s.status}</div>
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <div><strong style={{ color: colors.textDark }}>Email:</strong> {s.guestEmail}</div>
+                <div><strong style={{ color: colors.textDark }}>Visit Date:</strong> {s.visitDate}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
-};
-
-export default GuestRequest;
+}

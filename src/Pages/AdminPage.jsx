@@ -12,13 +12,13 @@ const AdminPage = () => {
       description: "Review and approve visitor pre-registration requests.",
       path: "/admin/requests",
     },
-    {
-      id: "assign",
-      title: "Assign Attendee / Host",
-      icon: "👤",
-      description: "Assign hosts or attendees to approved guest visits.",
-      path: "/admin/assign",
-    },
+    // {
+    //   id: "assign",
+    //   title: "Assign Attendee / Host",
+    //   icon: "👤",
+    //   description: "Assign hosts or attendees to approved guest visits.",
+    //   path: "/admin/assign",
+    // },
     {
       id: "logs",
       title: "Visitor Logs",

@@ -6,23 +6,17 @@ import AdminLogin from "./Pages/AdminLogin";
 import SecurityLogin from "./Pages/SecurityLogin";
 import GuestRequest from "./Pages/guest/GuestRequest";
 import GuestPage from "./Pages/GuestPage";
-import GuestStatus from "./Pages/guest/GuestStatus";
+// import GuestStatus from "./Pages/guest/GuestStatus";
 import AdminPage from "./Pages/AdminPage";
 import PendingRequest from "./Pages/admin/PendingRequest";
 import AssignAttendee from "./Pages/admin/AssignAttendee";
 import VisitorLogs from "./Pages/admin/VisitorLogs";
-import SecurityPage from "./Pages/SecurityPage";
 import GateDashboard from "./Pages/security/GateDashboard";
 import VerifyVisitor from "./Pages/security/VerifyVisitor";
 import OnSpotEntry from "./Pages/security/OnSpotEntry";
 import GateLogs from "./Pages/security/GateLogs";
 
-// const SecurityPage = () => (
-//   <div style={{ padding: "40px", fontFamily: "sans-serif" }}>
-//     <h1>Security Guard</h1>
-//     <p>Security area - coming soon</p>
-//   </div>
-// );
+
 
 function App() {
   return (
@@ -36,10 +30,9 @@ function App() {
         <Route path="/admin/logs" element={<VisitorLogs />} />
         <Route path="/guest" element={<GuestPage />} />
         <Route path="/guest/request" element={<GuestRequest />} />
-        <Route path="/guest/status" element={<GuestStatus />} />
+        {/* <Route path="/guest/status" element={<GuestStatus />} /> */}
         <Route path="/guest/login" element={<GuestLogin />} />
         <Route path="/security/login" element={<SecurityLogin />} />
-        <Route path="/security" element={<SecurityPage />} />
         <Route path="/security/dashboard" element={<GateDashboard />} />
         <Route path="/security/verify" element={<VerifyVisitor />} />
         <Route path="/security/on-spot-entry" element={<OnSpotEntry />} />

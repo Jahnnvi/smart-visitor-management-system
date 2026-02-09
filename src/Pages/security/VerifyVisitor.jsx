@@ -9,7 +9,7 @@ export default function VerifyVisitor() {
 		border: '#E5E4E3',
 	};
 
-	const [phone, setPhone] = useState('');
+	const [visitorId, setVisitorId] = useState('');
 	const [requestId, setRequestId] = useState('');
 	const [visitor, setVisitor] = useState(null);
 	const [error, setError] = useState('');
@@ -26,10 +26,10 @@ export default function VerifyVisitor() {
 	function handleVerify(e) {
 		e.preventDefault();
 		setError('');
-		const key = phone.trim() || requestId.trim();
+		const key = visitorId.trim() || requestId.trim();
 		if (!key) {
 			setVisitor(null);
-			setError('Enter a phone number or request ID to verify.');
+			setError('Enter visitor id or request ID to verify.');
 			return;
 		}
 
@@ -38,7 +38,7 @@ export default function VerifyVisitor() {
 		// Mock details
 		const mock = {
 			guestName: 'Alex Morgan',
-			phoneNumber: phone || '+1 555 0123',
+			visitorId: visitorId || '+1 555 0123',
 			visitorType: 'Pre-Registered',
 			purpose: 'Campus Meeting - Orientation',
 			assignedHost: 'Dr. Priya Sharma',
@@ -143,13 +143,13 @@ export default function VerifyVisitor() {
 					<div style={subtitleStyle}>Verify pre-registered visitors before entry</div>
 
 					<form onSubmit={handleVerify}>
-						<label style={labelStyle}>Phone Number</label>
+						<label style={labelStyle}>Visitor ID</label>
 						<input
 							style={inputStyle}
-							value={phone}
-							onChange={(e) => setPhone(e.target.value)}
-							placeholder="Enter visitor phone number"
-							aria-label="Phone Number"
+							value={visitorId}
+							onChange={(e) => setVisitorId(e.target.value)}
+							placeholder="Enter visitor id"
+							aria-label="Visitor ID"
 						/>
 
 						<label style={labelStyle}>Request ID (optional)</label>
@@ -181,7 +181,7 @@ export default function VerifyVisitor() {
 
 							<div style={{ marginTop: 10 }}>
 								{infoRow('Guest Name', visitor.guestName)}
-								{infoRow('Phone Number', visitor.phoneNumber)}
+								{infoRow('Visitor ID', visitor.visitorId)}
 								{infoRow('Visitor Type', visitor.visitorType)}
 								{infoRow('Purpose', visitor.purpose)}
 								{infoRow('Assigned Host', visitor.assignedHost)}
@@ -224,18 +224,12 @@ export default function VerifyVisitor() {
 				<div style={rightStyle}>
 					<div style={{ color: '#fff', fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Gate Tools</div>
 					<div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.5 }}>
-						- Verify using visitor phone or optional Request ID.
+						- Verify using visitor id or optional Request ID.
 						<br />- Approved visitors can be checked in from this panel.
-						<br />- This is a simulation; no data is sent to a server.
+						<br />- For any issues, contact the front desk or admin office.
 					</div>
 
-					<div style={{ marginTop: 18 }}>
-						<div style={{ color: '#ddd', fontSize: 13, marginBottom: 8 }}>Quick sample</div>
-						<div style={{ background: '#111', padding: 10, borderRadius: 8, color: '#eee', fontSize: 13 }}>
-							Try phone ending with an even digit → Approved
-							<br />ending with odd digit → Denied
-						</div>
-					</div>
+					
 				</div>
 			</div>
 		</div>
