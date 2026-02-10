@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/Authcontext";
 
 export default function GuestLogin() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [activeTab, setActiveTab] = useState("guest");
   const [loginRole, setLoginRole] = useState("guest");
   const [mobile, setMobile] = useState("");
@@ -179,6 +181,7 @@ export default function GuestLogin() {
       setErrors({ otp: "OTP must be 6 digits" });
       return;
     }
+    login(); 
     navigate("/guest", { 
       state: { 
         loginRole: "guest",
@@ -199,6 +202,7 @@ export default function GuestLogin() {
       setErrors({ password: "Password is required" });
       return;
     }
+    login();
     navigate("/guest", { 
       state: { 
         loginRole: "faculty",

@@ -14,7 +14,8 @@ const vars = {
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "linear-gradient(180deg, rgba(7,18,41,1) 0%, rgba(5,12,28,1) 100%)",
+    background:
+      "linear-gradient(180deg, rgba(7,18,41,1) 0%, rgba(5,12,28,1) 100%)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -28,7 +29,9 @@ const styles = {
     width: "100%",
     maxWidth: 1100,
   },
-  main: { flex: 1 },
+  main: {
+    flex: 1,
+  },
   card: {
     background: vars.cardBg,
     borderRadius: 12,
@@ -129,8 +132,12 @@ export default function GuestRequest() {
   };
 
   const [guestForm, setGuestForm] = useState(initialGuestForm);
-  const [facultyId, setFacultyId] = useState(location.state?.facultyId || "");
-  const [facultyName, setFacultyName] = useState(location.state?.facultyName || "");
+  const [facultyId, setFacultyId] = useState(
+    location.state?.facultyId || ""
+  );
+  const [facultyName, setFacultyName] = useState(
+    location.state?.facultyName || ""
+  );
   const [facultyEmail, setFacultyEmail] = useState("");
   const [facultyDepartment, setFacultyDepartment] = useState("");
   const [submitted, setSubmitted] = useState([]);
@@ -138,7 +145,7 @@ export default function GuestRequest() {
 
   function handleGuestChange(e) {
     const { name, value } = e.target;
-    setGuestForm((p) => ({ ...p, [name]: value }));
+    setGuestForm((prev) => ({ ...prev, [name]: value }));
   }
 
   function handleSubmit(e) {
@@ -150,7 +157,10 @@ export default function GuestRequest() {
       return;
     }
 
-    if (loginType === "faculty" && (!facultyId.trim() || !facultyName.trim())) {
+    if (
+      loginType === "faculty" &&
+      (!facultyId.trim() || !facultyName.trim())
+    ) {
       setShowNotice(true);
       return;
     }
@@ -176,65 +186,137 @@ export default function GuestRequest() {
     <div style={styles.page}>
       <div style={styles.layout}>
         <GuestSidebar />
+
         <div style={styles.main}>
           <div style={styles.card}>
             <h2 style={styles.title}>Enter Details</h2>
-            <p style={styles.subtitle}>Send request for admin approval</p>
+            <p style={styles.subtitle}>
+              Send request for admin approval
+            </p>
 
             <form onSubmit={handleSubmit}>
               {loginType === "faculty" && (
                 <div style={styles.section}>
-                  <div style={styles.sectionTitle}>Faculty Details</div>
+                  <div style={styles.sectionTitle}>
+                    Faculty Details
+                  </div>
+
                   <div style={styles.row}>
                     <label style={styles.label}>
                       Faculty Name
-                      <input style={styles.input} value={facultyName} onChange={(e) => setFacultyName(e.target.value)} />
+                      <input
+                        style={styles.input}
+                        value={facultyName}
+                        onChange={(e) =>
+                          setFacultyName(e.target.value)
+                        }
+                      />
                     </label>
+
                     <label style={styles.label}>
                       Faculty Email
-                      <input style={styles.input} type="email" value={facultyEmail} onChange={(e) => setFacultyEmail(e.target.value)} />
+                      <input
+                        style={styles.input}
+                        type="email"
+                        value={facultyEmail}
+                        onChange={(e) =>
+                          setFacultyEmail(e.target.value)
+                        }
+                      />
                     </label>
                   </div>
+
                   <div style={styles.row}>
                     <label style={styles.label}>
                       Faculty ID
-                      <input style={styles.input} value={facultyId} onChange={(e) => setFacultyId(e.target.value)} />
+                      <input
+                        style={styles.input}
+                        value={facultyId}
+                        onChange={(e) =>
+                          setFacultyId(e.target.value)
+                        }
+                      />
                     </label>
+
                     <label style={styles.label}>
                       Department
-                      <input style={styles.input} value={facultyDepartment} onChange={(e) => setFacultyDepartment(e.target.value)} />
+                      <input
+                        style={styles.input}
+                        value={facultyDepartment}
+                        onChange={(e) =>
+                          setFacultyDepartment(e.target.value)
+                        }
+                      />
                     </label>
                   </div>
                 </div>
               )}
 
               <div style={styles.section}>
-                <div style={styles.sectionTitle}>Guest Details</div>
+                <div style={styles.sectionTitle}>
+                  Guest Details
+                </div>
+
                 <div style={styles.row}>
                   <label style={styles.label}>
                     Guest Name
-                    <input name="guestName" style={styles.input} value={guestForm.guestName} onChange={handleGuestChange} />
+                    <input
+                      name="guestName"
+                      style={styles.input}
+                      value={guestForm.guestName}
+                      onChange={handleGuestChange}
+                    />
                   </label>
+
                   <label style={styles.label}>
                     Guest Email
-                    <input name="guestEmail" type="email" required style={styles.input} value={guestForm.guestEmail} onChange={handleGuestChange} />
+                    <input
+                      name="guestEmail"
+                      type="email"
+                      required
+                      style={styles.input}
+                      value={guestForm.guestEmail}
+                      onChange={handleGuestChange}
+                    />
                   </label>
                 </div>
+
                 <div style={styles.row}>
                   <label style={styles.label}>
                     Phone
-                    <input name="guestPhone" style={styles.input} value={guestForm.guestPhone} onChange={handleGuestChange} />
+                    <input
+                      name="guestPhone"
+                      style={styles.input}
+                      value={guestForm.guestPhone}
+                      onChange={handleGuestChange}
+                    />
                   </label>
+
                   <label style={styles.label}>
                     Visit Date
-                    <input name="visitDate" type="date" style={styles.input} value={guestForm.visitDate} onChange={handleGuestChange} />
+                    <input
+                      name="visitDate"
+                      type="date"
+                      style={styles.input}
+                      value={guestForm.visitDate}
+                      onChange={handleGuestChange}
+                    />
                   </label>
                 </div>
+
                 <label style={styles.label}>
                   Purpose of Visit
-                  <textarea name="purpose" style={styles.textarea} value={guestForm.purpose} onChange={handleGuestChange} />
+                  <textarea
+                    name="purpose"
+                    style={styles.textarea}
+                    value={guestForm.purpose}
+                    onChange={handleGuestChange}
+                  />
                 </label>
-                <button style={styles.submit}>Send Request</button>
+
+                <button style={styles.submit}>
+                  Send Request
+                </button>
               </div>
             </form>
 

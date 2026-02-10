@@ -11,6 +11,7 @@ const MainLogin = () => {
       icon: "⚙️",
       description: "Manage visitors, settings, and system configuration.",
       path: "/admin/login",
+      animation: "slideInLeft",
     },
     {
       id: "guest",
@@ -18,6 +19,7 @@ const MainLogin = () => {
       icon: "👤",
       description: "Register as a visitor and check in to the campus.",
       path: "/guest/login",
+      animation: "slideInUp",
     },
     {
       id: "security",
@@ -25,6 +27,7 @@ const MainLogin = () => {
       icon: "🛡️",
       description: "Verify visitors, monitor check-ins, and manage access.",
       path: "/security/login",
+      animation: "slideInRight",
     },
   ];
 
@@ -44,7 +47,6 @@ const MainLogin = () => {
     fontWeight: 600,
     color: "#2A2A2A",
     marginBottom: "8px",
-    letterSpacing: "-0.02em",
   };
 
   const subtitleStyle = {
@@ -67,11 +69,14 @@ const MainLogin = () => {
     borderRadius: "12px",
     padding: "32px",
     width: "280px",
-    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.12)",
     display: "flex",
     flexDirection: "column",
     alignItems: "flex-start",
     border: "1px solid #E5E4E3",
+    animationDuration: "0.9s",
+    animationTimingFunction: "ease-out",
+    animationFillMode: "both",
   };
 
   const iconStyle = {
@@ -106,30 +111,54 @@ const MainLogin = () => {
     cursor: "pointer",
   };
 
-  const handleContinue = (path) => {
-    navigate(path);
-  };
-
   return (
-    <div style={pageStyle}>
-      <h1 style={headingStyle}>Visitor Management System</h1>
-      <p style={subtitleStyle}>Select your role to continue</p>
-      <div style={cardsWrapperStyle}>
-        {roles.map((role) => (
-          <div key={role.id} style={cardStyle}>
-            <span style={iconStyle}>{role.icon}</span>
-            <h2 style={cardTitleStyle}>{role.title}</h2>
-            <p style={cardDescStyle}>{role.description}</p>
-            <button
-              style={buttonStyle}
-              onClick={() => handleContinue(role.path)}
+    <>
+      {/* ANIMATIONS */}
+      <style>{`
+        @keyframes slideInLeft {
+          from { opacity: 0; transform: translateX(-80px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInRight {
+          from { opacity: 0; transform: translateX(80px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInUp {
+          from { opacity: 0; transform: translateY(80px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      <div style={pageStyle}>
+        <h1 style={headingStyle}>Visitor Management System</h1>
+        <p style={subtitleStyle}>Select your role to continue</p>
+
+        <div style={cardsWrapperStyle}>
+          {roles.map((role, index) => (
+            <div
+              key={role.id}
+              style={{
+                ...cardStyle,
+                animationName: role.animation,
+                animationDelay: `${index * 0.15}s`,
+              }}
             >
-              Continue
-            </button>
-          </div>
-        ))}
+              <span style={iconStyle}>{role.icon}</span>
+              <h2 style={cardTitleStyle}>{role.title}</h2>
+              <p style={cardDescStyle}>{role.description}</p>
+              <button
+                style={buttonStyle}
+                onClick={() => navigate(role.path)}
+              >
+                Continue
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
