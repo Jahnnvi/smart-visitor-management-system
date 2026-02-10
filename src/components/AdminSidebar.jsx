@@ -21,8 +21,8 @@ export default function AdminSidebar() {
         </div>
 
         <div
-          className={`gsb-item ${path === "/admin/visitor-logs" ? "active" : ""}`}
-          onClick={() => navigate("/admin/visitor-logs")}
+          className={`gsb-item ${path === "/admin/logs" ? "active" : ""}`}
+          onClick={() => navigate("/admin/logs")}
         >
           Visitor Logs
         </div>

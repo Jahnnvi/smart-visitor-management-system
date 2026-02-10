@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import AdminSidebar from "../../components/AdminSidebar";
 import VisitorStatsModal from "../../components/VisitorStatsModal";
 
 const MOCK_TODAY = "2025-02-15";
@@ -66,6 +67,25 @@ const mockLogs = [
   },
 ];
 
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background: "linear-gradient(180deg, #071229, #050c1c)",
+    padding: 28,
+    fontFamily:
+      "Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial",
+    display: "flex",
+    justifyContent: "center",
+  },
+  layout: {
+    display: "flex",
+    gap: 22,
+    width: "100%",
+    maxWidth: 1200,
+  },
+  main: { flex: 1 },
+};
+
 const VisitorLogs = () => {
   const [dateFilter, setDateFilter] = useState("All");
   const [showModal, setShowModal] = useState(false);
@@ -77,16 +97,10 @@ const VisitorLogs = () => {
     return mockLogs;
   }, [dateFilter]);
 
-  const pageStyle = {
-    minHeight: "100vh",
-    backgroundColor: "#FAFCFC",
-    padding: "40px 24px",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-  };
+  /* ---- EXISTING STYLES (UNCHANGED) ---- */
 
   const headerStyle = {
-    maxWidth: "1200px",
-    margin: "0 auto 24px",
+    marginBottom: "24px",
   };
 
   const topRowStyle = {
@@ -101,15 +115,13 @@ const VisitorLogs = () => {
   const titleStyle = {
     fontSize: "1.75rem",
     fontWeight: 600,
-    color: "#2A2A2A",
+    color: "#FAFCFC",
     marginBottom: "8px",
-    letterSpacing: "-0.02em",
   };
 
   const subtitleStyle = {
     fontSize: "0.95rem",
-    color: "#2A2A2A",
-    opacity: 0.8,
+    color: "#9aa6b2",
   };
 
   const controlsStyle = {
@@ -141,17 +153,11 @@ const VisitorLogs = () => {
     cursor: "pointer",
   });
 
-  const containerStyle = {
-    maxWidth: "1200px",
-    margin: "0 auto",
-  };
-
   const cardStyle = {
     backgroundColor: "#222121",
     borderRadius: "12px",
     padding: "24px",
     overflowX: "auto",
-    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
     border: "1px solid #E5E4E3",
   };
 
@@ -172,131 +178,98 @@ const VisitorLogs = () => {
   const tdStyle = {
     padding: "12px 16px",
     color: "#FAFCFC",
-    opacity: 0.95,
     borderBottom: "1px solid #E5E4E3",
   };
 
-  const statusBadgeBase = {
-    display: "inline-block",
+  const badgeBase = {
     padding: "4px 10px",
     borderRadius: "6px",
     fontSize: "0.8rem",
     fontWeight: 600,
   };
 
-  const statusBadgeIn = {
-    ...statusBadgeBase,
-    backgroundColor: "#4CD1D6",
-    color: "#222121",
-  };
-
-  const statusBadgeOut = {
-    ...statusBadgeBase,
-    backgroundColor: "#E5E4E3",
-    color: "#2A2A2A",
-  };
-
-  const statusBadgeDenied = {
-    ...statusBadgeBase,
-    backgroundColor: "#2A2A2A",
-    color: "#FAFCFC",
-    opacity: 0.85,
-  };
-
   const getStatusBadgeStyle = (status) => {
-    if (status === "In") return statusBadgeIn;
-    if (status === "Denied") return statusBadgeDenied;
-    return statusBadgeOut;
-  };
-
-  const typeBadgePre = {
-    ...statusBadgeBase,
-    backgroundColor: "#4CD1D6",
-    color: "#222121",
-  };
-
-  const typeBadgeSpot = {
-    ...statusBadgeBase,
-    backgroundColor: "#E5E4E3",
-    color: "#2A2A2A",
+    if (status === "In")
+      return { ...badgeBase, backgroundColor: "#4CD1D6", color: "#222121" };
+    if (status === "Denied")
+      return { ...badgeBase, backgroundColor: "#2A2A2A", color: "#FAFCFC" };
+    return { ...badgeBase, backgroundColor: "#E5E4E3", color: "#2A2A2A" };
   };
 
   return (
-    <div style={pageStyle}>
-      <div style={headerStyle}>
-        <h1 style={titleStyle}>Visitor Logs</h1>
-        <p style={subtitleStyle}>View and track visitor activity</p>
-      </div>
-      <div style={containerStyle}>
-        <div style={topRowStyle}>
-          <div style={controlsStyle}>
-            <button
-              style={statsButtonStyle}
-              onClick={() => setShowModal(true)}
-            >
-              See Statistics
-            </button>
-            <button
-              style={filterButtonStyle(dateFilter === "Today")}
-              onClick={() => setDateFilter("Today")}
-            >
-              Today
-            </button>
-            <button
-              style={filterButtonStyle(dateFilter === "All")}
-              onClick={() => setDateFilter("All")}
-            >
-              All
-            </button>
+    <div style={styles.page}>
+      <div style={styles.layout}>
+        {/* ✅ Admin Sidebar added */}
+        <AdminSidebar />
+
+        <div style={styles.main}>
+          <div style={headerStyle}>
+            <h1 style={titleStyle}>Visitor Logs</h1>
+            <p style={subtitleStyle}>View and track visitor activity</p>
+          </div>
+
+          <div style={topRowStyle}>
+            <div style={controlsStyle}>
+              <button
+                style={statsButtonStyle}
+                onClick={() => setShowModal(true)}
+              >
+                See Statistics
+              </button>
+              <button
+                style={filterButtonStyle(dateFilter === "Today")}
+                onClick={() => setDateFilter("Today")}
+              >
+                Today
+              </button>
+              <button
+                style={filterButtonStyle(dateFilter === "All")}
+                onClick={() => setDateFilter("All")}
+              >
+                All
+              </button>
+            </div>
+          </div>
+
+          <div style={cardStyle}>
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Guest Name</th>
+                  <th style={thStyle}>Phone</th>
+                  <th style={thStyle}>Visitor Type</th>
+                  <th style={thStyle}>Purpose</th>
+                  <th style={thStyle}>Assigned Host</th>
+                  <th style={thStyle}>Visit Date</th>
+                  <th style={thStyle}>Check-In</th>
+                  <th style={thStyle}>Check-Out</th>
+                  <th style={thStyle}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLogs.map((log) => (
+                  <tr key={log.id}>
+                    <td style={tdStyle}>{log.guestName}</td>
+                    <td style={tdStyle}>{log.phone}</td>
+                    <td style={tdStyle}>{log.visitorType}</td>
+                    <td style={tdStyle}>{log.purpose}</td>
+                    <td style={tdStyle}>{log.assignedHost}</td>
+                    <td style={tdStyle}>{log.visitDate}</td>
+                    <td style={tdStyle}>{log.checkInTime}</td>
+                    <td style={tdStyle}>{log.checkOutTime}</td>
+                    <td style={tdStyle}>
+                      <span style={getStatusBadgeStyle(log.status)}>
+                        {log.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-        <div style={cardStyle}>
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Guest Name</th>
-                <th style={thStyle}>Phone</th>
-                <th style={thStyle}>Visitor Type</th>
-                <th style={thStyle}>Purpose</th>
-                <th style={thStyle}>Assigned Host</th>
-                <th style={thStyle}>Visit Date</th>
-                <th style={thStyle}>Check-In</th>
-                <th style={thStyle}>Check-Out</th>
-                <th style={thStyle}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredLogs.map((log) => (
-                <tr key={log.id}>
-                  <td style={tdStyle}>{log.guestName}</td>
-                  <td style={tdStyle}>{log.phone}</td>
-                  <td style={tdStyle}>
-                    <span
-                      style={
-                        log.visitorType === "Pre-Registered"
-                          ? typeBadgePre
-                          : typeBadgeSpot
-                      }
-                    >
-                      {log.visitorType}
-                    </span>
-                  </td>
-                  <td style={tdStyle}>{log.purpose}</td>
-                  <td style={tdStyle}>{log.assignedHost}</td>
-                  <td style={tdStyle}>{log.visitDate}</td>
-                  <td style={tdStyle}>{log.checkInTime}</td>
-                  <td style={tdStyle}>{log.checkOutTime}</td>
-                  <td style={tdStyle}>
-                    <span style={getStatusBadgeStyle(log.status)}>
-                      {log.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
+
       <VisitorStatsModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}

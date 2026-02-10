@@ -1,237 +1,290 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import SecuritySidebar from "../../components/SecuritySidebar";
 
 export default function VerifyVisitor() {
-	const PALETTE = {
-		background: '#FAFCFC',
-		cardDark: '#222121',
-		textDark: '#2A2A2A',
-		accent: '#4CD1D6',
-		border: '#E5E4E3',
-	};
+  const PALETTE = {
+    background: "#FAFCFC",
+    cardDark: "#222121",
+    textDark: "#2A2A2A",
+    accent: "#4CD1D6",
+    border: "#E5E4E3",
+  };
 
-	const [visitorId, setVisitorId] = useState('');
-	const [requestId, setRequestId] = useState('');
-	const [visitor, setVisitor] = useState(null);
-	const [error, setError] = useState('');
+  const [visitorId, setVisitorId] = useState("");
+  const [requestId, setRequestId] = useState("");
+  const [visitor, setVisitor] = useState(null);
+  const [error, setError] = useState("");
 
-	function determineStatus(source) {
-		// Simple deterministic mock: last numeric char even => Approved, odd => Denied
-		const digits = source.replace(/\D/g, '');
-		if (!digits) return 'Denied';
-		const last = parseInt(digits[digits.length - 1], 10);
-		if (Number.isNaN(last)) return 'Denied';
-		return last % 2 === 0 ? 'Approved' : 'Denied';
-	}
+  function determineStatus(source) {
+    const digits = source.replace(/\D/g, "");
+    if (!digits) return "Denied";
+    const last = parseInt(digits[digits.length - 1], 10);
+    if (Number.isNaN(last)) return "Denied";
+    return last % 2 === 0 ? "Approved" : "Denied";
+  }
 
-	function handleVerify(e) {
-		e.preventDefault();
-		setError('');
-		const key = visitorId.trim() || requestId.trim();
-		if (!key) {
-			setVisitor(null);
-			setError('Enter visitor id or request ID to verify.');
-			return;
-		}
+  function handleVerify(e) {
+    e.preventDefault();
+    setError("");
 
-		const status = determineStatus(key);
+    const key = visitorId.trim() || requestId.trim();
+    if (!key) {
+      setVisitor(null);
+      setError("Enter visitor id or request ID to verify.");
+      return;
+    }
 
-		// Mock details
-		const mock = {
-			guestName: 'Alex Morgan',
-			visitorId: visitorId || '+1 555 0123',
-			visitorType: 'Pre-Registered',
-			purpose: 'Campus Meeting - Orientation',
-			assignedHost: 'Dr. Priya Sharma',
-			visitDate: new Date().toLocaleString(),
-			approvalStatus: status,
-			checkedIn: false,
-			requestId: requestId || 'REQ-' + Math.floor(Math.random() * 90000 + 10000),
-		};
+    const status = determineStatus(key);
 
-		setVisitor(mock);
-	}
+    const mock = {
+      guestName: "Alex Morgan",
+      visitorId: visitorId || "+1 555 0123",
+      visitorType: "Pre-Registered",
+      purpose: "Campus Meeting - Orientation",
+      assignedHost: "Dr. Priya Sharma",
+      visitDate: new Date().toLocaleString(),
+      approvalStatus: status,
+      checkedIn: false,
+      requestId: requestId || "REQ-" + Math.floor(Math.random() * 90000 + 10000),
+    };
 
-	function handleAllowEntry() {
-		if (!visitor) return;
-		setVisitor({ ...visitor, approvalStatus: 'Checked In', checkedIn: true });
-	}
+    setVisitor(mock);
+  }
 
-	const containerStyle = {
-		minHeight: '100vh',
-		background: PALETTE.background,
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-		padding: '40px 16px',
-		color: PALETTE.textDark,
-		fontFamily: 'Helvetica, Arial, sans-serif',
-	};
+  function handleAllowEntry() {
+    if (!visitor) return;
+    setVisitor({ ...visitor, approvalStatus: "Checked In", checkedIn: true });
+  }
 
-	const cardStyle = {
-		background: PALETTE.cardDark,
-		color: '#fff',
-		borderRadius: 10,
-		width: 820,
-		maxWidth: '100%',
-		boxShadow: '0 6px 22px rgba(0,0,0,0.25)',
-		overflow: 'hidden',
-		display: 'flex',
-		flexDirection: 'row',
-	};
+  /* ---- LAYOUT STYLES (MATCH GuestRequest) ---- */
 
-	const leftStyle = {
-		flex: 1,
-		padding: 28,
-		borderRight: `1px solid ${PALETTE.border}`,
-		background: PALETTE.cardDark,
-	};
+  const pageStyle = {
+    minHeight: "100vh",
+    background:
+      "linear-gradient(180deg, rgba(7,18,41,1) 0%, rgba(5,12,28,1) 100%)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 28,
+    fontFamily:
+      "Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial",
+  };
 
-	const rightStyle = {
-		width: 360,
-		padding: 24,
-		background: PALETTE.cardDark,
-	};
+  const layoutStyle = {
+    display: "flex",
+    gap: 22,
+    width: "100%",
+    maxWidth: 1100,
+  };
 
-	const titleStyle = { margin: 0, fontSize: 28, color: PALETTE.accent };
-	const subtitleStyle = { marginTop: 6, marginBottom: 18, color: '#ddd' };
+  const mainStyle = {
+  flex: 1,
+  display: "flex",
+  alignItems: "center",     // vertical center
+  justifyContent: "center" // horizontal center
+};
 
-	const labelStyle = { display: 'block', color: '#ddd', marginBottom: 6, fontSize: 13 };
-	const inputStyle = {
-		width: '100%',
-		padding: '10px 12px',
-		borderRadius: 6,
-		border: `1px solid ${PALETTE.border}`,
-		marginBottom: 14,
-		outline: 'none',
-		fontSize: 14,
-		background: '#fff',
-		color: PALETTE.textDark,
-	};
 
-	const buttonStyle = {
-		background: PALETTE.accent,
-		border: 'none',
-		color: '#222',
-		padding: '10px 14px',
-		borderRadius: 8,
-		cursor: 'pointer',
-		fontWeight: 700,
-		fontSize: 14,
-	};
+  /* ---- EXISTING UI STYLES (UNCHANGED) ---- */
 
-	const infoCardStyle = {
-		marginTop: 18,
-		background: '#fff',
-		color: PALETTE.textDark,
-		padding: 16,
-		borderRadius: 8,
-		border: `1px solid ${PALETTE.border}`,
-	};
+  const cardStyle = {
+    background: PALETTE.cardDark,
+    color: "#fff",
+    borderRadius: 10,
+    maxWidth: "100%",
+    boxShadow: "0 6px 22px rgba(0,0,0,0.25)",
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "row",
+	border: `1px solid ${PALETTE.border}`,
+	
+  };
 
-	const infoRow = (label, value) => (
-		<div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-			<div style={{ color: '#6b6b6b', fontSize: 13 }}>{label}</div>
-			<div style={{ fontWeight: 600 }}>{value}</div>
-		</div>
-	);
+  const leftStyle = {
+    flex: 1,
+    padding: 28,
+    borderRight: `1px solid ${PALETTE.border}`,
+    background: PALETTE.cardDark,
+  };
 
-	return (
-		<div style={containerStyle}>
-			<div style={cardStyle}>
-				<div style={leftStyle}>
-					<h1 style={titleStyle}>Verify Visitor</h1>
-					<div style={subtitleStyle}>Verify pre-registered visitors before entry</div>
+  const rightStyle = {
+    width: 360,
+    padding: 24,
+    background: PALETTE.cardDark,
+  };
 
-					<form onSubmit={handleVerify}>
-						<label style={labelStyle}>Visitor ID</label>
-						<input
-							style={inputStyle}
-							value={visitorId}
-							onChange={(e) => setVisitorId(e.target.value)}
-							placeholder="Enter visitor id"
-							aria-label="Visitor ID"
-						/>
+  const titleStyle = { margin: 0, fontSize: 28, color: PALETTE.accent };
+  const subtitleStyle = { marginTop: 6, marginBottom: 18, color: "#ddd" };
 
-						<label style={labelStyle}>Request ID (optional)</label>
-						<input
-							style={inputStyle}
-							value={requestId}
-							onChange={(e) => setRequestId(e.target.value)}
-							placeholder="Optional request ID"
-							aria-label="Request ID"
-						/>
+  const labelStyle = { display: "block", color: "#ddd", marginBottom: 6, fontSize: 13 };
+  const inputStyle = {
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 6,
+    border: `1px solid ${PALETTE.border}`,
+    marginBottom: 14,
+    outline: "none",
+    fontSize: 14,
+    background: "#fff",
+    color: PALETTE.textDark,
+  };
 
-						<div style={{ marginTop: 10, display: 'flex', gap: 10 }}>
-							<button type="submit" style={buttonStyle}>Verify Visitor</button>
-						</div>
-					</form>
+  const buttonStyle = {
+    background: PALETTE.accent,
+    border: "none",
+    color: "#222",
+    padding: "10px 14px",
+    borderRadius: 8,
+    cursor: "pointer",
+    fontWeight: 700,
+    fontSize: 14,
+  };
 
-					{error && (
-						<div style={{ marginTop: 12, color: '#ffdddd', background: '#3a1515', padding: 10, borderRadius: 6 }}>
-							{error}
-						</div>
-					)}
+  const infoCardStyle = {
+    marginTop: 18,
+    background: "#fff",
+    color: PALETTE.textDark,
+    padding: 16,
+    borderRadius: 8,
+    border: `1px solid ${PALETTE.border}`,
+  };
 
-					{visitor && (
-						<div style={infoCardStyle}>
-							<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-								<div style={{ fontSize: 16, fontWeight: 700 }}>Visitor Details</div>
-								<div style={{ fontSize: 12, color: '#666' }}>Request: {visitor.requestId}</div>
-							</div>
+  const infoRow = (label, value) => (
+    <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0" }}>
+      <div style={{ color: "#6b6b6b", fontSize: 13 }}>{label}</div>
+      <div style={{ fontWeight: 600 }}>{value}</div>
+    </div>
+  );
 
-							<div style={{ marginTop: 10 }}>
-								{infoRow('Guest Name', visitor.guestName)}
-								{infoRow('Visitor ID', visitor.visitorId)}
-								{infoRow('Visitor Type', visitor.visitorType)}
-								{infoRow('Purpose', visitor.purpose)}
-								{infoRow('Assigned Host', visitor.assignedHost)}
-								{infoRow('Visit Date', visitor.visitDate)}
-								<div style={{ paddingTop: 8 }}>
-									<div style={{ fontSize: 13, color: '#6b6b6b' }}>Approval Status</div>
-									<div style={{ marginTop: 6 }}>
-										{visitor.approvalStatus === 'Approved' && (
-											<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-												<div style={{ background: PALETTE.accent, color: '#072022', padding: '6px 10px', borderRadius: 6, fontWeight: 700 }}>
-													Approved
-												</div>
-												{!visitor.checkedIn && (
-													<button onClick={handleAllowEntry} style={{ ...buttonStyle, padding: '8px 10px' }}>
-														Allow Entry
-													</button>
-												)}
-												{visitor.checkedIn && (
-													<div style={{ color: PALETTE.textDark, fontWeight: 700 }}>Checked In</div>
-												)}
-											</div>
-										)}
+  return (
+    <div style={pageStyle}>
+      <div style={layoutStyle}>
+        {/* ✅ Security Sidebar added */}
+        <SecuritySidebar />
 
-										{visitor.approvalStatus === 'Denied' && (
-											<div style={{ color: '#fff', marginTop: 6, padding: 10, borderRadius: 6, background: '#3b2b2b' }}>
-												Entry Denied
-											</div>
-										)}
+        <div style={mainStyle}>
+          <div style={cardStyle}>
+            <div style={leftStyle}>
+              <h1 style={titleStyle}>Verify Visitor</h1>
+              <div style={subtitleStyle}>
+                Verify pre-registered visitors before entry
+              </div>
 
-										{visitor.approvalStatus === 'Checked In' && (
-											<div style={{ color: PALETTE.accent, fontWeight: 800, marginTop: 6 }}>Checked In</div>
-										)}
-									</div>
-								</div>
-							</div>
-						</div>
-					)}
-				</div>
+              <form onSubmit={handleVerify}>
+                <label style={labelStyle}>Visitor ID</label>
+                <input
+                  style={inputStyle}
+                  value={visitorId}
+                  onChange={(e) => setVisitorId(e.target.value)}
+                  placeholder="Enter visitor id"
+                />
 
-				<div style={rightStyle}>
-					<div style={{ color: '#fff', fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Gate Tools</div>
-					<div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.5 }}>
-						- Verify using visitor id or optional Request ID.
-						<br />- Approved visitors can be checked in from this panel.
-						<br />- For any issues, contact the front desk or admin office.
-					</div>
+                <label style={labelStyle}>Request ID (optional)</label>
+                <input
+                  style={inputStyle}
+                  value={requestId}
+                  onChange={(e) => setRequestId(e.target.value)}
+                  placeholder="Optional request ID"
+                />
 
-					
-				</div>
-			</div>
-		</div>
-	);
+                <button type="submit" style={buttonStyle}>
+                  Verify Visitor
+                </button>
+              </form>
+
+              {error && (
+                <div
+                  style={{
+                    marginTop: 12,
+                    color: "#ffdddd",
+                    background: "#3a1515",
+                    padding: 10,
+                    borderRadius: 6,
+                  }}
+                >
+                  {error}
+                </div>
+              )}
+
+              {visitor && (
+                <div style={infoCardStyle}>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>
+                    Visitor Details
+                  </div>
+
+                  {infoRow("Guest Name", visitor.guestName)}
+                  {infoRow("Visitor ID", visitor.visitorId)}
+                  {infoRow("Visitor Type", visitor.visitorType)}
+                  {infoRow("Purpose", visitor.purpose)}
+                  {infoRow("Assigned Host", visitor.assignedHost)}
+                  {infoRow("Visit Date", visitor.visitDate)}
+
+                  <div style={{ marginTop: 10 }}>
+                    {visitor.approvalStatus === "Approved" && (
+                      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                        <div
+                          style={{
+                            background: PALETTE.accent,
+                            color: "#072022",
+                            padding: "6px 10px",
+                            borderRadius: 6,
+                            fontWeight: 700,
+                          }}
+                        >
+                          Approved
+                        </div>
+                        {!visitor.checkedIn && (
+                          <button
+                            onClick={handleAllowEntry}
+                            style={{ ...buttonStyle, padding: "8px 10px" }}
+                          >
+                            Allow Entry
+                          </button>
+                        )}
+                        {visitor.checkedIn && (
+                          <div style={{ fontWeight: 700 }}>Checked In</div>
+                        )}
+                      </div>
+                    )}
+
+                    {visitor.approvalStatus === "Denied" && (
+                      <div
+                        style={{
+                          marginTop: 6,
+                          padding: 10,
+                          borderRadius: 6,
+                          background: "#3b2b2b",
+                          color: "#fff",
+                        }}
+                      >
+                        Entry Denied
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={rightStyle}>
+              <div
+                style={{
+                  color: "#fff",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  marginBottom: 12,
+                }}
+              >
+                Gate Tools
+              </div>
+              <div style={{ color: "#ccc", fontSize: 13, lineHeight: 1.5 }}>
+                - Verify using visitor id or optional Request ID.
+                <br />- Approved visitors can be checked in from this panel.
+                <br />- For any issues, contact the front desk or admin office.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

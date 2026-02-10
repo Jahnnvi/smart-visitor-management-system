@@ -9,7 +9,7 @@ import GuestPage from "./Pages/GuestPage";
 import GuestStatus from "./Pages/guest/GuestStatus";
 import AdminPage from "./Pages/AdminPage";
 import PendingRequest from "./Pages/admin/PendingRequest";
-import AssignAttendee from "./Pages/admin/AssignAttendee";
+//import AssignAttendee from "./Pages/admin/AssignAttendee";
 import VisitorLogs from "./Pages/admin/VisitorLogs";
 import GateDashboard from "./Pages/security/GateDashboard";
 import VerifyVisitor from "./Pages/security/VerifyVisitor";
@@ -27,7 +27,7 @@ function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/requests" element={<PendingRequest />} />
-        <Route path="/admin/assign" element={<AssignAttendee />} />
+        {/* <Route path="/admin/assign" element={<AssignAttendee />} /> */}
         <Route path="/admin/logs" element={<VisitorLogs />} />
         <Route path="/guest" element={<GuestPage />} />
         <Route path="/guest/request" element={<GuestRequest />} />

@@ -1,12 +1,124 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import GuestSidebar from "../../components/GuestSidebar";
-import "./GuestRequest.css";
+
+const vars = {
+  bg: "#071229",
+  cardBg: "#ffffff",
+  panelBg: "#071022",
+  muted: "#9aa6b2",
+  accent: "#06b6d4",
+  text: "#0b1220",
+};
+
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background: "linear-gradient(180deg, rgba(7,18,41,1) 0%, rgba(5,12,28,1) 100%)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 28,
+    fontFamily:
+      "Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial",
+  },
+  layout: {
+    display: "flex",
+    gap: 22,
+    width: "100%",
+    maxWidth: 1100,
+  },
+  main: { flex: 1 },
+  card: {
+    background: vars.cardBg,
+    borderRadius: 12,
+    padding: 22,
+    boxShadow: "0 22px 60px rgba(2,6,23,0.6)",
+    border: "1px solid rgba(255,255,255,0.04)",
+  },
+  title: {
+    color: vars.accent,
+    margin: "0 0 4px 0",
+    fontSize: 20,
+    fontWeight: 700,
+  },
+  subtitle: {
+    margin: 0,
+    color: vars.muted,
+    fontSize: 13,
+  },
+  section: {
+    marginBottom: 18,
+    padding: 14,
+    borderRadius: 10,
+    background:
+      "linear-gradient(180deg, rgba(245,249,251,0.9), rgba(250,251,252,0.86))",
+    border: "1px solid rgba(2,6,23,0.06)",
+  },
+  sectionTitle: {
+    color: vars.text,
+    fontWeight: 700,
+    marginBottom: 10,
+    fontSize: 14,
+  },
+  row: {
+    display: "flex",
+    gap: 12,
+    marginBottom: 12,
+    alignItems: "center",
+  },
+  label: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+    flex: 1,
+    fontSize: 13,
+    color: vars.muted,
+  },
+  input: {
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid rgba(15,23,42,0.06)",
+    fontSize: 14,
+    color: vars.text,
+    background: "#fff",
+  },
+  textarea: {
+    width: "100%",
+    minHeight: 110,
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid rgba(15,23,42,0.06)",
+    fontSize: 14,
+    color: vars.text,
+    resize: "vertical",
+    background: "#fff",
+  },
+  submit: {
+    marginTop: 14,
+    background: vars.accent,
+    color: "#fff",
+    padding: "11px 18px",
+    borderRadius: 12,
+    border: "none",
+    fontWeight: 700,
+    cursor: "pointer",
+    boxShadow: "0 16px 40px rgba(6,182,212,0.14)",
+  },
+  confirm: {
+    marginTop: 14,
+    background: "#fff",
+    color: vars.text,
+    border: "1px solid rgba(15,23,42,0.04)",
+    padding: 14,
+    borderRadius: 10,
+    boxShadow: "0 12px 30px rgba(2,6,23,0.06)",
+  },
+};
 
 export default function GuestRequest() {
   const location = useLocation();
-  const loginRole = location.state?.loginRole || "guest";
-  const loginType = loginRole; // backward compatibility
+  const loginType = location.state?.loginRole || "guest";
 
   const initialGuestForm = {
     guestName: "",
@@ -29,22 +141,6 @@ export default function GuestRequest() {
     setGuestForm((p) => ({ ...p, [name]: value }));
   }
 
-  function handleFacultyIdChange(e) {
-    setFacultyId(e.target.value);
-  }
-
-  function handleFacultyNameChange(e) {
-    setFacultyName(e.target.value);
-  }
-
-  function handleFacultyEmailChange(e) {
-    setFacultyEmail(e.target.value);
-  }
-
-  function handleFacultyDepartmentChange(e) {
-    setFacultyDepartment(e.target.value);
-  }
-
   function handleSubmit(e) {
     e.preventDefault();
     setShowNotice(false);
@@ -54,11 +150,9 @@ export default function GuestRequest() {
       return;
     }
 
-    if (loginType === "faculty") {
-      if (!facultyId.trim() || !facultyName.trim()) {
-        setShowNotice(true);
-        return;
-      }
+    if (loginType === "faculty" && (!facultyId.trim() || !facultyName.trim())) {
+      setShowNotice(true);
+      return;
     }
 
     const newReq = {
@@ -67,123 +161,93 @@ export default function GuestRequest() {
       visitDate: guestForm.visitDate || "—",
       status: "Pending Admin Approval",
       id: Date.now(),
+      facultyName,
+      facultyId,
+      facultyDepartment,
+      invitedByRole: loginType === "faculty" ? "faculty" : undefined,
     };
-
-    if (loginType === "faculty") {
-      newReq.invitedByRole = "faculty";
-      newReq.facultyId = facultyId;
-      newReq.facultyName = facultyName;
-      newReq.facultyDepartment = facultyDepartment;
-    }
 
     setSubmitted((s) => [newReq, ...s]);
     setShowNotice(true);
     setGuestForm(initialGuestForm);
   }
 
-  /* Styling moved to GuestRequest.css - visual-only changes */
-
   return (
-    <div className="gr-page">
-      <div className="gr-layout">
+    <div style={styles.page}>
+      <div style={styles.layout}>
         <GuestSidebar />
-        <div className="gr-main">
-          <div className="gr-card">
-            <div>
-              <h2 className="gr-title">Enter Details</h2>
-              <p className="gr-subtitle">Send request for admin approval</p>
-            </div>
+        <div style={styles.main}>
+          <div style={styles.card}>
+            <h2 style={styles.title}>Enter Details</h2>
+            <p style={styles.subtitle}>Send request for admin approval</p>
 
-            <form onSubmit={handleSubmit} className="gr-formBox">
+            <form onSubmit={handleSubmit}>
               {loginType === "faculty" && (
-                <div className="gr-section">
-                  <div className="gr-sectionTitle">Faculty Details</div>
-                  <div className="gr-row">
-                    <label className="gr-label">
+                <div style={styles.section}>
+                  <div style={styles.sectionTitle}>Faculty Details</div>
+                  <div style={styles.row}>
+                    <label style={styles.label}>
                       Faculty Name
-                      <input value={facultyName} onChange={handleFacultyNameChange} placeholder="Faculty Name" className="gr-input" />
+                      <input style={styles.input} value={facultyName} onChange={(e) => setFacultyName(e.target.value)} />
                     </label>
-                    <label className="gr-label">
+                    <label style={styles.label}>
                       Faculty Email
-                      <input type="email" value={facultyEmail} onChange={handleFacultyEmailChange} placeholder="Faculty Email" className="gr-input" />
+                      <input style={styles.input} type="email" value={facultyEmail} onChange={(e) => setFacultyEmail(e.target.value)} />
                     </label>
                   </div>
-                  <div className="gr-row">
-                    <label className="gr-label">
+                  <div style={styles.row}>
+                    <label style={styles.label}>
                       Faculty ID
-                      <input value={facultyId} onChange={handleFacultyIdChange} placeholder="Faculty ID" className="gr-input" />
+                      <input style={styles.input} value={facultyId} onChange={(e) => setFacultyId(e.target.value)} />
                     </label>
-                    <label className="gr-label">
+                    <label style={styles.label}>
                       Department
-                      <input value={facultyDepartment} onChange={handleFacultyDepartmentChange} placeholder="Department" className="gr-input" />
+                      <input style={styles.input} value={facultyDepartment} onChange={(e) => setFacultyDepartment(e.target.value)} />
                     </label>
                   </div>
                 </div>
               )}
 
-              <div className="gr-section">
-                <div className="gr-sectionTitle">Guest Details</div>
-                <div className="gr-row">
-                  <label className="gr-label">
+              <div style={styles.section}>
+                <div style={styles.sectionTitle}>Guest Details</div>
+                <div style={styles.row}>
+                  <label style={styles.label}>
                     Guest Name
-                    <input name="guestName" value={guestForm.guestName} onChange={handleGuestChange} placeholder="Guest Name" className="gr-input" />
+                    <input name="guestName" style={styles.input} value={guestForm.guestName} onChange={handleGuestChange} />
                   </label>
-                  <label className="gr-label">
+                  <label style={styles.label}>
                     Guest Email
-                    <input name="guestEmail" type="email" value={guestForm.guestEmail} onChange={handleGuestChange} placeholder="Guest Email (required)" className="gr-input" required />
+                    <input name="guestEmail" type="email" required style={styles.input} value={guestForm.guestEmail} onChange={handleGuestChange} />
                   </label>
                 </div>
-                <div className="gr-row">
-                  <label className="gr-label">
+                <div style={styles.row}>
+                  <label style={styles.label}>
                     Phone
-                    <input name="guestPhone" value={guestForm.guestPhone} onChange={handleGuestChange} placeholder="Guest Phone Number" className="gr-input" />
+                    <input name="guestPhone" style={styles.input} value={guestForm.guestPhone} onChange={handleGuestChange} />
                   </label>
-                  <label className="gr-label">
+                  <label style={styles.label}>
                     Visit Date
-                    <input name="visitDate" type="date" value={guestForm.visitDate} onChange={handleGuestChange} className="gr-input" />
+                    <input name="visitDate" type="date" style={styles.input} value={guestForm.visitDate} onChange={handleGuestChange} />
                   </label>
                 </div>
-                <label className="gr-label">
+                <label style={styles.label}>
                   Purpose of Visit
-                  <textarea name="purpose" value={guestForm.purpose} onChange={handleGuestChange} placeholder="Purpose of Visit" className="gr-textarea" />
+                  <textarea name="purpose" style={styles.textarea} value={guestForm.purpose} onChange={handleGuestChange} />
                 </label>
-                <button type="submit" className="gr-submit">Send Request</button>
+                <button style={styles.submit}>Send Request</button>
               </div>
             </form>
 
-            <div>
-              {showNotice && submitted.length === 0 && (
-                <div className="gr-confirmCard">
-                  <strong>Notice:</strong>
-                  <div style={{ marginTop: 8 }}>
-                    {loginType === "faculty"
-                      ? "Please provide Faculty ID, Faculty Name, and Guest Email to submit a request."
-                      : "Please provide a Guest Email to submit a request."}
-                  </div>
+            {showNotice && submitted.length === 0 && (
+              <div style={styles.confirm}>
+                <strong>Notice:</strong>
+                <div style={{ marginTop: 8 }}>
+                  {loginType === "faculty"
+                    ? "Please provide Faculty ID, Faculty Name, and Guest Email."
+                    : "Please provide a Guest Email."}
                 </div>
-              )}
-
-              {submitted.map((s) => (
-                <div key={s.id} className="gr-confirmCard">
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <div style={{ fontWeight: 700 }}>{s.guestName}</div>
-                    <div style={{ color: "#4CD1D6", fontWeight: 700 }}>{s.status}</div>
-                  </div>
-                  <div style={{ marginTop: 8 }}>
-                    {s.invitedByRole === "faculty" && (
-                      <>
-                        <div><strong>Faculty:</strong> {s.facultyName}</div>
-                        <div><strong>Faculty ID:</strong> {s.facultyId}</div>
-                        <div><strong>Department:</strong> {s.facultyDepartment || "—"}</div>
-                      </>
-                    )}
-                    <div><strong>Email:</strong> {s.guestEmail}</div>
-                    <div><strong>Visit Date:</strong> {s.visitDate}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
+              </div>
+            )}
           </div>
         </div>
       </div>
