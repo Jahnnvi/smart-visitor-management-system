@@ -1,8 +1,10 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const GuestPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const loginState = location.state || {};
 
   const actions = [
     {
@@ -98,7 +100,7 @@ const GuestPage = () => {
   };
 
   const handleContinue = (path) => {
-    navigate(path);
+    navigate(path, { state: loginState });
   };
 
   return (

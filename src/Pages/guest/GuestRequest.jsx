@@ -1,163 +1,190 @@
 import React, { useState } from "react";
-
+import { useLocation } from "react-router-dom";
+import GuestSidebar from "../../components/GuestSidebar";
+import "./GuestRequest.css";
 
 export default function GuestRequest() {
-  const initialForm = {
-    facultyName: "",
-    facultyEmail: "",
-    facultyId: "",
-    department: "",
+  const location = useLocation();
+  const loginRole = location.state?.loginRole || "guest";
+  const loginType = loginRole; // backward compatibility
+
+  const initialGuestForm = {
     guestName: "",
     guestEmail: "",
-    guestPhone: "",
+    guestPhone: location.state?.guestMobile || "",
     purpose: "",
     visitDate: "",
   };
 
-  const [form, setForm] = useState(initialForm);
+  const [guestForm, setGuestForm] = useState(initialGuestForm);
+  const [facultyId, setFacultyId] = useState(location.state?.facultyId || "");
+  const [facultyName, setFacultyName] = useState(location.state?.facultyName || "");
+  const [facultyEmail, setFacultyEmail] = useState("");
+  const [facultyDepartment, setFacultyDepartment] = useState("");
   const [submitted, setSubmitted] = useState([]);
   const [showNotice, setShowNotice] = useState(false);
 
-  function handleChange(e) {
+  function handleGuestChange(e) {
     const { name, value } = e.target;
-    setForm((p) => ({ ...p, [name]: value }));
+    setGuestForm((p) => ({ ...p, [name]: value }));
+  }
+
+  function handleFacultyIdChange(e) {
+    setFacultyId(e.target.value);
+  }
+
+  function handleFacultyNameChange(e) {
+    setFacultyName(e.target.value);
+  }
+
+  function handleFacultyEmailChange(e) {
+    setFacultyEmail(e.target.value);
+  }
+
+  function handleFacultyDepartmentChange(e) {
+    setFacultyDepartment(e.target.value);
   }
 
   function handleSubmit(e) {
     e.preventDefault();
     setShowNotice(false);
 
-    // Basic required field: guestEmail
-    if (!form.guestEmail) {
+    if (!guestForm.guestEmail) {
       setShowNotice(true);
       return;
     }
 
+    if (loginType === "faculty") {
+      if (!facultyId.trim() || !facultyName.trim()) {
+        setShowNotice(true);
+        return;
+      }
+    }
+
     const newReq = {
-      guestName: form.guestName || "—",
-      guestEmail: form.guestEmail,
-      visitDate: form.visitDate || "—",
+      guestName: guestForm.guestName || "—",
+      guestEmail: guestForm.guestEmail,
+      visitDate: guestForm.visitDate || "—",
       status: "Pending Admin Approval",
       id: Date.now(),
     };
 
+    if (loginType === "faculty") {
+      newReq.invitedByRole = "faculty";
+      newReq.facultyId = facultyId;
+      newReq.facultyName = facultyName;
+      newReq.facultyDepartment = facultyDepartment;
+    }
+
     setSubmitted((s) => [newReq, ...s]);
     setShowNotice(true);
-    setForm(initialForm);
+    setGuestForm(initialGuestForm);
   }
 
-  // Palette
-  const colors = {
-    bg: "#FAFCFC",
-    card: "#222121",
-    textDark: "#2A2A2A",
-    accent: "#4CD1D6",
-    border: "#E5E4E3",
-  };
-
-  const page = {
-    minHeight: "100vh",
-    background: colors.bg,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "24px",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-  };
-
-  const card = {
-    width: "720px",
-    maxWidth: "95%",
-    background: colors.card,
-    color: colors.bg,
-    borderRadius: "10px",
-    border: `1px solid ${colors.border}`,
-    padding: "18px",
-    display: "flex",
-    flexDirection: "column",
-  };
-
-  const title = { color: colors.accent, margin: 0, fontSize: "22px" };
-  const subtitle = { color: colors.bg, margin: 0, fontSize: "13px", opacity: 0.95 };
-
-  const formBox = {
-    marginTop: "12px",
-    background: colors.bg,
-    color: colors.textDark,
-    padding: "14px",
-    borderRadius: "8px",
-    maxHeight: "420px",
-    overflowY: "auto",
-    border: `1px solid ${colors.border}`,
-  };
-
-  const section = { marginBottom: "12px" };
-  const sectionTitle = { color: colors.textDark, fontWeight: 600, marginBottom: "8px" };
-  const row = { display: "flex", gap: "10px", marginBottom: "10px" };
-  const input = { flex: 1, padding: "8px 10px", borderRadius: "6px", border: `1px solid ${colors.border}`, fontSize: "14px" };
-  const textarea = { width: "100%", minHeight: "80px", padding: "8px 10px", borderRadius: "6px", border: `1px solid ${colors.border}`, fontSize: "14px" };
-  const submit = { marginTop: "12px", background: colors.accent, color: colors.card, padding: "10px 14px", borderRadius: "6px", border: "none", fontWeight: 600, cursor: "pointer", alignSelf: "flex-start" };
-  const confirmCard = { marginTop: "14px", background: "#FFFFFF", color: colors.textDark, border: `1px solid ${colors.border}`, padding: "12px", borderRadius: "8px" };
+  /* Styling moved to GuestRequest.css - visual-only changes */
 
   return (
-    <div style={page}>
-      <div style={card}>
-        <div>
-          <h2 style={title}>Invite Guest</h2>
-          <p style={subtitle}>Send request for admin approval</p>
-        </div>
-
-        <form onSubmit={handleSubmit} style={formBox}>
-          <div style={section}>
-            <div style={sectionTitle}>Faculty Details</div>
-            <div style={row}>
-              <input name="facultyName" value={form.facultyName} onChange={handleChange} placeholder="Faculty Name" style={input} />
-              <input name="facultyEmail" type="email" value={form.facultyEmail} onChange={handleChange} placeholder="Faculty Email" style={input} />
-            </div>
-            <div style={row}>
-              <input name="facultyId" value={form.facultyId} onChange={handleChange} placeholder="Faculty ID" style={input} />
-              <input name="department" value={form.department} onChange={handleChange} placeholder="Department" style={input} />
-            </div>
-          </div>
-
-          <div style={section}>
-            <div style={sectionTitle}>Guest Details</div>
-            <div style={row}>
-              <input name="guestName" value={form.guestName} onChange={handleChange} placeholder="Guest Name" style={input} />
-              <input name="guestEmail" type="email" value={form.guestEmail} onChange={handleChange} placeholder="Guest Email (required)" style={input} required />
-            </div>
-            <div style={row}>
-              <input name="guestPhone" value={form.guestPhone} onChange={handleChange} placeholder="Guest Phone Number" style={input} />
-              <input name="visitDate" type="date" value={form.visitDate} onChange={handleChange} style={input} />
-            </div>
+    <div className="gr-page">
+      <div className="gr-layout">
+        <GuestSidebar />
+        <div className="gr-main">
+          <div className="gr-card">
             <div>
-              <textarea name="purpose" value={form.purpose} onChange={handleChange} placeholder="Purpose of Visit" style={textarea} />
+              <h2 className="gr-title">Enter Details</h2>
+              <p className="gr-subtitle">Send request for admin approval</p>
             </div>
 
-            <button type="submit" style={submit}>Send Request</button>
+            <form onSubmit={handleSubmit} className="gr-formBox">
+              {loginType === "faculty" && (
+                <div className="gr-section">
+                  <div className="gr-sectionTitle">Faculty Details</div>
+                  <div className="gr-row">
+                    <label className="gr-label">
+                      Faculty Name
+                      <input value={facultyName} onChange={handleFacultyNameChange} placeholder="Faculty Name" className="gr-input" />
+                    </label>
+                    <label className="gr-label">
+                      Faculty Email
+                      <input type="email" value={facultyEmail} onChange={handleFacultyEmailChange} placeholder="Faculty Email" className="gr-input" />
+                    </label>
+                  </div>
+                  <div className="gr-row">
+                    <label className="gr-label">
+                      Faculty ID
+                      <input value={facultyId} onChange={handleFacultyIdChange} placeholder="Faculty ID" className="gr-input" />
+                    </label>
+                    <label className="gr-label">
+                      Department
+                      <input value={facultyDepartment} onChange={handleFacultyDepartmentChange} placeholder="Department" className="gr-input" />
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              <div className="gr-section">
+                <div className="gr-sectionTitle">Guest Details</div>
+                <div className="gr-row">
+                  <label className="gr-label">
+                    Guest Name
+                    <input name="guestName" value={guestForm.guestName} onChange={handleGuestChange} placeholder="Guest Name" className="gr-input" />
+                  </label>
+                  <label className="gr-label">
+                    Guest Email
+                    <input name="guestEmail" type="email" value={guestForm.guestEmail} onChange={handleGuestChange} placeholder="Guest Email (required)" className="gr-input" required />
+                  </label>
+                </div>
+                <div className="gr-row">
+                  <label className="gr-label">
+                    Phone
+                    <input name="guestPhone" value={guestForm.guestPhone} onChange={handleGuestChange} placeholder="Guest Phone Number" className="gr-input" />
+                  </label>
+                  <label className="gr-label">
+                    Visit Date
+                    <input name="visitDate" type="date" value={guestForm.visitDate} onChange={handleGuestChange} className="gr-input" />
+                  </label>
+                </div>
+                <label className="gr-label">
+                  Purpose of Visit
+                  <textarea name="purpose" value={guestForm.purpose} onChange={handleGuestChange} placeholder="Purpose of Visit" className="gr-textarea" />
+                </label>
+                <button type="submit" className="gr-submit">Send Request</button>
+              </div>
+            </form>
+
+            <div>
+              {showNotice && submitted.length === 0 && (
+                <div className="gr-confirmCard">
+                  <strong>Notice:</strong>
+                  <div style={{ marginTop: 8 }}>
+                    {loginType === "faculty"
+                      ? "Please provide Faculty ID, Faculty Name, and Guest Email to submit a request."
+                      : "Please provide a Guest Email to submit a request."}
+                  </div>
+                </div>
+              )}
+
+              {submitted.map((s) => (
+                <div key={s.id} className="gr-confirmCard">
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div style={{ fontWeight: 700 }}>{s.guestName}</div>
+                    <div style={{ color: "#4CD1D6", fontWeight: 700 }}>{s.status}</div>
+                  </div>
+                  <div style={{ marginTop: 8 }}>
+                    {s.invitedByRole === "faculty" && (
+                      <>
+                        <div><strong>Faculty:</strong> {s.facultyName}</div>
+                        <div><strong>Faculty ID:</strong> {s.facultyId}</div>
+                        <div><strong>Department:</strong> {s.facultyDepartment || "—"}</div>
+                      </>
+                    )}
+                    <div><strong>Email:</strong> {s.guestEmail}</div>
+                    <div><strong>Visit Date:</strong> {s.visitDate}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
           </div>
-        </form>
-
-        <div>
-          {showNotice && submitted.length === 0 && (
-            <div style={confirmCard}>
-              <strong>Notice:</strong>
-              <div style={{ marginTop: 8 }}>Please provide a Guest Email to submit a request.</div>
-            </div>
-          )}
-
-          {submitted.map((s) => (
-            <div key={s.id} style={confirmCard}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontWeight: 700 }}>{s.guestName}</div>
-                <div style={{ color: colors.accent, fontWeight: 700 }}>{s.status}</div>
-              </div>
-              <div style={{ marginTop: 8 }}>
-                <div><strong style={{ color: colors.textDark }}>Email:</strong> {s.guestEmail}</div>
-                <div><strong style={{ color: colors.textDark }}>Visit Date:</strong> {s.visitDate}</div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
