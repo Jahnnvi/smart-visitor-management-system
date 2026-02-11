@@ -54,7 +54,7 @@ const Footer = () => {
 
         <div style={infoStyle}>
           <p style={{ margin: "0 0 8px 0" }}>
-            📧 Email: contact@visitorx.com | 📞 Phone: +1-800-VISITOR
+            📧 Email: contact@visitorx.com | 📞 Phone: +91 98765 43210
           </p>
           <p style={{ margin: 0 }}>Secure guest management for modern institutions</p>
         </div>

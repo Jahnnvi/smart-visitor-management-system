@@ -113,14 +113,14 @@ export default function About() {
           <div className="checkin-content animate-text-right">
             <h2>Check-in your visitors swiftly and safely</h2>
             
-            <p className="checkin-description">
-              A fully customisable system that suits a wide range of business needs.
+           <p className="checkin-description">
+                A smart campus visitor management platform designed for secure, organized, and seamless guest handling.
             </p>
 
-            <h3 className="checkin-subheading">Register, Display, and Go</h3>
+            <h3 className="checkin-subheading">Invite, Approve, and Verify</h3>
             
             <p className="checkin-supporting">
-              Register your institution and generate secure visitor passes in minutes.
+                Faculty can invite guests, admins approve requests, and security verifies entry — all in one streamlined workflow.
             </p>
 
             <button className="cta-button" onClick={() => navigate("/login")}>Get Started</button>
