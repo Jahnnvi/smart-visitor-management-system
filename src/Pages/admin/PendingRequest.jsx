@@ -1,36 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminSidebar from "../../components/AdminSidebar";
+export default function PendingRequest() {
 
-const initialRequests = [
-  {
-    id: 1,
-    guestName: "John Doe",
-    guestEmail: "john.doe@gmail.com",
-    phone: "9876543210",
-    organization: "ABC University",
-    purpose: "Campus tour and admissions meeting",
-    visitDate: "2025-02-15",
-    facultyName: "Dr. Ananya Rao",
-    facultyEmail: "ananya.rao@college.edu",
-    facultyId: "25MCA0129",
-    department: "Computer Science",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    guestName: "Jane Smith",
-    guestEmail: "jane.smith@gmail.com",
-    phone: "9123456789",
-    organization: "XYZ Corp",
-    purpose: "Vendor meeting with IT department",
-    visitDate: "2025-02-16",
-    facultyName: "Prof. Rahul Mehta",
-    facultyEmail: "rahul.mehta@college.edu",
-    facultyId: "24IT0098",
-    department: "Information Technology",
-    status: "Pending",
-  },
-];
 
 const styles = {
   page: {
@@ -69,34 +40,61 @@ const styles = {
   value: { fontSize: 15, fontWeight: 500 },
 };
 
-export default function PendingRequest() {
-  const [requests, setRequests] = useState(initialRequests);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const handleApprove = (id) => {
-    const req = requests.find((r) => r.id === id);
+  // Fetch all visitors on mount
+  useEffect(() => {
+    async function fetchVisitors() {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await fetch("http://localhost:8000/api/visitors");
+        if (!res.ok) throw new Error("Failed to fetch visitors");
+        const data = await res.json();
+        // Filter only pending requests (status: "pending")
+        const pending = (Array.isArray(data.data) ? data.data : []).filter(
+          (v) => (v.status || "").toLowerCase() === "pending"
+        );
+        setRequests(pending);
+      } catch (err) {
+        setError(err.message || "Error fetching requests");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchVisitors();
+  }, []);
 
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "Approved" } : r))
-    );
-
-    alert(
-      `✅ REQUEST APPROVED
-
-Guest Email Sent To:
-${req.guestEmail}
-
-Faculty Email Sent To:
-${req.facultyEmail}
-
-Visit Date:
-${req.visitDate}`
-    );
+  // Approve handler
+  const handleApprove = async (visitorId) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/visitors/${visitorId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "approved" }),
+      });
+      if (!res.ok) throw new Error("Failed to approve request");
+      setRequests((prev) => prev.filter((r) => r.visitorId !== visitorId));
+    } catch (err) {
+      alert("Error approving request: " + (err.message || "Unknown error"));
+    }
   };
 
-  const handleDeny = (id) => {
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "Denied" } : r))
-    );
+  // Reject handler
+  const handleDeny = async (visitorId) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/visitors/${visitorId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "rejected" }),
+      });
+      if (!res.ok) throw new Error("Failed to reject request");
+      setRequests((prev) => prev.filter((r) => r.visitorId !== visitorId));
+    } catch (err) {
+      alert("Error rejecting request: " + (err.message || "Unknown error"));
+    }
   };
 
   const badgeBase = {
@@ -127,8 +125,13 @@ ${req.visitDate}`
             Review and approve faculty-invited guest requests
           </p>
 
+          {loading && <div style={{ color: '#FAFCFC', marginTop: 32 }}>Loading...</div>}
+          {error && <div style={{ color: '#F44336', marginTop: 32 }}>{error}</div>}
+          {!loading && !error && requests.length === 0 && (
+            <div style={{ color: '#FAFCFC', marginTop: 32 }}>No pending requests.</div>
+          )}
           {requests.map((req) => (
-            <div key={req.id} style={styles.card}>
+            <div key={req.visitorId || req.id} style={styles.card}>
               <div style={styles.row}>
                 <Field label="Faculty Name" value={req.facultyName} />
                 <Field label="Faculty ID" value={req.facultyId} />
@@ -137,12 +140,12 @@ ${req.visitDate}`
 
               <div style={styles.row}>
                 <Field label="Faculty Email" value={req.facultyEmail} />
-                <Field label="Guest Email" value={req.guestEmail} />
+                <Field label="Guest Email" value={req.guestEmail || req.email} />
               </div>
 
               <div style={styles.row}>
-                <Field label="Guest Name" value={req.guestName} />
-                <Field label="Phone" value={req.phone} />
+                <Field label="Guest Name" value={req.guestName || req.visitorName} />
+                <Field label="Phone" value={req.guestPhone || req.phone} />
                 <Field label="Organization" value={req.organization} />
               </div>
 
@@ -158,7 +161,7 @@ ${req.visitDate}`
                 </div>
               </div>
 
-              {req.status === "Pending" && (
+              {req.status && req.status.toLowerCase() === "pending" && (
                 <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
                   <button
                     style={{
@@ -170,7 +173,7 @@ ${req.visitDate}`
                       fontWeight: 600,
                       cursor: "pointer",
                     }}
-                    onClick={() => handleApprove(req.id)}
+                    onClick={() => handleApprove(req.visitorId)}
                   >
                     Approve
                   </button>
@@ -184,7 +187,7 @@ ${req.visitDate}`
                       fontWeight: 600,
                       cursor: "pointer",
                     }}
-                    onClick={() => handleDeny(req.id)}
+                    onClick={() => handleDeny(req.visitorId)}
                   >
                     Deny
                   </button>
