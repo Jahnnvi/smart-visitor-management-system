@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import SecuritySidebar from "../../components/SecuritySidebar";
 
 export default function GateLogs() {
@@ -10,7 +10,7 @@ export default function GateLogs() {
     border: "#E5E4E3",
   };
 
-  const mockToday = [
+  const [mockToday, setMockToday] = useState([
     {
       id: "1",
       name: "Alex Morgan",
@@ -51,7 +51,7 @@ export default function GateLogs() {
       checkOut: "-",
       status: "In",
     },
-  ];
+  ]);
 
   /* ---------- LAYOUT (MATCH OTHER SECURITY PAGES) ---------- */
 
@@ -90,7 +90,7 @@ export default function GateLogs() {
     boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
     background: PALETTE.tableDark,
     color: "#fff",
-	border: `1px solid ${PALETTE.border}`,
+    border: `1px solid ${PALETTE.border}`,
   };
 
   const header = {
@@ -153,6 +153,39 @@ export default function GateLogs() {
     };
   }
 
+  const checkoutBtn = {
+    background: PALETTE.accent,
+    color: "#072022",
+    border: "none",
+    padding: "8px 12px",
+    borderRadius: 8,
+    fontWeight: 800,
+    cursor: "pointer",
+  };
+
+  function getCurrentTime() {
+    return new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function handleCheckout(id) {
+    const outTime = getCurrentTime();
+
+    setMockToday((prev) =>
+      prev.map((v) =>
+        v.id === id
+          ? {
+              ...v,
+              status: "Out",
+              checkOut: outTime,
+            }
+          : v
+      )
+    );
+  }
+
   return (
     <div style={pageStyle}>
       <div style={layoutStyle}>
@@ -191,8 +224,18 @@ export default function GateLogs() {
                       <td style={td}>{v.purpose}</td>
                       <td style={td}>{v.checkIn}</td>
                       <td style={td}>{v.checkOut || "-"}</td>
+
                       <td style={td}>
-                        <span style={statusStyle(v.status)}>{v.status}</span>
+                        {v.status === "In" ? (
+                          <button
+                            style={checkoutBtn}
+                            onClick={() => handleCheckout(v.id)}
+                          >
+                            CheckOut
+                          </button>
+                        ) : (
+                          <span style={statusStyle(v.status)}>{v.status}</span>
+                        )}
                       </td>
                     </tr>
                   ))}
