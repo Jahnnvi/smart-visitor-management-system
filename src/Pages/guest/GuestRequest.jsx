@@ -1,11 +1,143 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
+import GuestSidebar from "../../components/GuestSidebar";
 
+const vars = {
+  bg: "#071229",
+  cardBg: "#ffffff",
+  panelBg: "#071022",
+  muted: "#9aa6b2",
+  accent: "#06b6d4",
+  text: "#0b1220",
+};
+
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background:
+      "linear-gradient(180deg, rgba(7,18,41,1) 0%, rgba(5,12,28,1) 100%)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 28,
+    fontFamily:
+      "Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial",
+  },
+  layout: {
+    display: "flex",
+    gap: 22,
+    width: "100%",
+    maxWidth: 1100,
+  },
+  main: {
+    flex: 1,
+  },
+  card: {
+    background: vars.cardBg,
+    borderRadius: 12,
+    padding: 22,
+    boxShadow: "0 22px 60px rgba(2,6,23,0.6)",
+    border: "1px solid rgba(255,255,255,0.04)",
+  },
+  title: {
+    color: vars.accent,
+    margin: "0 0 4px 0",
+    fontSize: 20,
+    fontWeight: 700,
+  },
+  subtitle: {
+    margin: 0,
+    color: vars.muted,
+    fontSize: 13,
+  },
+  section: {
+    marginBottom: 18,
+    padding: 14,
+    borderRadius: 10,
+    background:
+      "linear-gradient(180deg, rgba(245,249,251,0.9), rgba(250,251,252,0.86))",
+    border: "1px solid rgba(2,6,23,0.06)",
+  },
+  sectionTitle: {
+    color: vars.text,
+    fontWeight: 700,
+    marginBottom: 10,
+    fontSize: 14,
+  },
+  row: {
+    display: "flex",
+    gap: 12,
+    marginBottom: 12,
+    alignItems: "center",
+  },
+  label: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+    flex: 1,
+    fontSize: 13,
+    color: vars.muted,
+  },
+  input: {
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid rgba(15,23,42,0.06)",
+    fontSize: 14,
+    color: vars.text,
+    background: "#fff",
+  },
+  textarea: {
+    width: "100%",
+    minHeight: 110,
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "1px solid rgba(15,23,42,0.06)",
+    fontSize: 14,
+    color: vars.text,
+    resize: "vertical",
+    background: "#fff",
+  },
+  submit: {
+    marginTop: 14,
+    background: vars.accent,
+    color: "#fff",
+    padding: "11px 18px",
+    borderRadius: 12,
+    border: "none",
+    fontWeight: 700,
+    cursor: "pointer",
+    boxShadow: "0 16px 40px rgba(6,182,212,0.14)",
+  },
+  confirm: {
+    marginTop: 14,
+    background: "#fff",
+    color: vars.text,
+    border: "1px solid rgba(15,23,42,0.04)",
+    padding: 14,
+    borderRadius: 10,
+    boxShadow: "0 12px 30px rgba(2,6,23,0.06)",
+  },
+  success: {
+    marginTop: 14,
+    padding: 14,
+    borderRadius: 10,
+    background: "#E8F5E9",
+    color: "#2E7D32",
+    fontWeight: 600,
+  },
+  error: {
+    marginTop: 14,
+    padding: 14,
+    borderRadius: 10,
+    background: "#FFEBEE",
+    color: "#C62828",
+    fontWeight: 600,
+  },
+};
 
 export default function GuestRequest() {
   const location = useLocation();
-  const loginRole = location.state?.loginRole || "guest";
-  const loginType = loginRole; // backward compatibility
+  const loginType = location.state?.loginRole || "guest";
 
   const initialGuestForm = {
     guestName: "",
@@ -17,33 +149,18 @@ export default function GuestRequest() {
 
   const [guestForm, setGuestForm] = useState(initialGuestForm);
   const [facultyId, setFacultyId] = useState(location.state?.facultyId || "");
-  const [facultyName, setFacultyName] = useState(location.state?.facultyName || "");
+  const [facultyName, setFacultyName] = useState(
+    location.state?.facultyName || ""
+  );
   const [facultyEmail, setFacultyEmail] = useState("");
   const [facultyDepartment, setFacultyDepartment] = useState("");
-  const [submitted, setSubmitted] = useState([]);
-  const [showNotice, setShowNotice] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [showNotice, setShowNotice] = useState(false);
 
   function handleGuestChange(e) {
     const { name, value } = e.target;
-    setGuestForm((p) => ({ ...p, [name]: value }));
-  }
-
-  function handleFacultyIdChange(e) {
-    setFacultyId(e.target.value);
-  }
-
-  function handleFacultyNameChange(e) {
-    setFacultyName(e.target.value);
-  }
-
-  function handleFacultyEmailChange(e) {
-    setFacultyEmail(e.target.value);
-  }
-
-  function handleFacultyDepartmentChange(e) {
-    setFacultyDepartment(e.target.value);
+    setGuestForm((prev) => ({ ...prev, [name]: value }));
   }
 
   async function handleSubmit(e) {
@@ -51,275 +168,222 @@ export default function GuestRequest() {
     setShowNotice(false);
     setMessage({ type: "", text: "" });
 
-    // Validate guest email (always required)
     if (!guestForm.guestEmail) {
       setShowNotice(true);
       return;
     }
 
-    // Validate faculty fields if faculty login
-    if (loginType === "faculty") {
-      if (!facultyId.trim() || !facultyName.trim()) {
-        setShowNotice(true);
-        return;
-      }
+    if (
+      loginType === "faculty" &&
+      (!facultyId.trim() || !facultyName.trim())
+    ) {
+      setShowNotice(true);
+      return;
     }
 
     try {
       setLoading(true);
 
-      // Prepare data for API
-   const apiData = {
-  createdByRole: loginType,
-
-  facultyName: loginType === "faculty" ? facultyName : undefined,
-  facultyEmail: loginType === "faculty" ? facultyEmail : undefined,
-  facultyId: loginType === "faculty" ? facultyId : undefined,
-  department: loginType === "faculty" ? facultyDepartment : undefined,
-
-  guestName: guestForm.guestName,
-  guestEmail: guestForm.guestEmail,
-  guestPhone: guestForm.guestPhone,
-  organization: "",
-  purpose: guestForm.purpose,
-  visitDate: guestForm.visitDate,
-};
-
-      // Send POST request to backend
-      const response = await fetch("http://localhost:8000/api/visitors", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(apiData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to submit request");
-      }
-
-      // Show success message
-      setMessage({ type: "success", text: "Request submitted successfully!" });
-
-      // Update UI with new request
-      const newReq = {
-        guestName: guestForm.guestName || "—",
+      const apiData = {
+        createdByRole: loginType,
+        facultyName: loginType === "faculty" ? facultyName : undefined,
+        facultyEmail: loginType === "faculty" ? facultyEmail : undefined,
+        facultyId: loginType === "faculty" ? facultyId : undefined,
+        department:
+          loginType === "faculty" ? facultyDepartment : undefined,
+        guestName: guestForm.guestName,
         guestEmail: guestForm.guestEmail,
-        visitDate: guestForm.visitDate || "—",
-        status: "Pending Admin Approval",
-        id: Date.now(),
+        guestPhone: guestForm.guestPhone,
+        organization: "",
+        purpose: guestForm.purpose,
+        visitDate: guestForm.visitDate,
       };
 
-      // Include faculty data if faculty login
-      if (loginType === "faculty") {
-        newReq.invitedByRole = "faculty";
-        newReq.facultyId = facultyId;
-        newReq.facultyName = facultyName;
-        newReq.facultyDepartment = facultyDepartment;
-      }
+      const response = await fetch(
+        "http://localhost:8000/api/visitors",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(apiData),
+        }
+      );
 
-      setSubmitted((s) => [newReq, ...s]);
-      setShowNotice(true);
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.message || "Failed to submit");
+
+      setMessage({
+        type: "success",
+        text: "Request submitted successfully!",
+      });
+
       setGuestForm(initialGuestForm);
     } catch (error) {
-      setMessage({ type: "error", text: `Error: ${error.message}` });
-      console.error("API Error:", error);
+      setMessage({ type: "error", text: error.message });
     } finally {
       setLoading(false);
     }
   }
 
-  // Palette
-  const colors = {
-    bg: "#FAFCFC",
-    card: "#222121",
-    textDark: "#2A2A2A",
-    accent: "#4CD1D6",
-    border: "#E5E4E3",
-  };
-
-  const page = {
-    minHeight: "100vh",
-    background: colors.bg,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "24px",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-  };
-
-  const card = {
-    width: "720px",
-    maxWidth: "95%",
-    background: colors.card,
-    color: colors.bg,
-    borderRadius: "10px",
-    border: `1px solid ${colors.border}`,
-    padding: "18px",
-    display: "flex",
-    flexDirection: "column",
-  };
-
-  const title = { color: colors.accent, margin: 0, fontSize: "22px" };
-  const subtitle = { color: colors.bg, margin: 0, fontSize: "13px", opacity: 0.95 };
-
-  const formBox = {
-    marginTop: "12px",
-    background: colors.bg,
-    color: colors.textDark,
-    padding: "14px",
-    borderRadius: "8px",
-    maxHeight: "420px",
-    overflowY: "auto",
-    border: `1px solid ${colors.border}`,
-  };
-
-  const section = { marginBottom: "12px" };
-  const sectionTitle = { color: colors.textDark, fontWeight: 600, marginBottom: "8px" };
-  const row = { display: "flex", gap: "10px", marginBottom: "10px" };
-  const input = { flex: 1, padding: "8px 10px", borderRadius: "6px", border: `1px solid ${colors.border}`, fontSize: "14px" };
-  const textarea = { width: "100%", minHeight: "80px", padding: "8px 10px", borderRadius: "6px", border: `1px solid ${colors.border}`, fontSize: "14px" };
-  const submit = { marginTop: "12px", background: colors.accent, color: colors.card, padding: "10px 14px", borderRadius: "6px", border: "none", fontWeight: 600, cursor: "pointer", alignSelf: "flex-start", opacity: loading ? 0.6 : 1, pointerEvents: loading ? "none" : "auto" };
-  const confirmCard = { marginTop: "14px", background: "#FFFFFF", color: colors.textDark, border: `1px solid ${colors.border}`, padding: "12px", borderRadius: "8px" };
-  const messageCard = { marginTop: "14px", padding: "12px", borderRadius: "8px", border: `1px solid ${colors.border}`, fontWeight: 600 };
-  const successCard = { ...messageCard, background: "#E8F5E9", color: "#2E7D32", borderColor: "#4CAF50" };
-  const errorCard = { ...messageCard, background: "#FFEBEE", color: "#C62828", borderColor: "#F44336" };
-
   return (
-    <div style={page}>
-      <div style={card}>
-        <div>
-          <h2 style={title}>Enter Details</h2>
-          <p style={subtitle}>Send request for admin approval</p>
-        </div>
+    <div style={styles.page}>
+      <div style={styles.layout}>
+        <GuestSidebar />
 
-        <form onSubmit={handleSubmit} style={formBox}>
-          {loginType === "faculty" && (
-            <div style={section}>
-              <div style={sectionTitle}>Faculty Details</div>
-              <div style={row}>
-                <input 
-                  value={facultyName} 
-                  onChange={handleFacultyNameChange} 
-                  placeholder="Faculty Name" 
-                  style={input} 
-                />
-                <input 
-                  type="email" 
-                  value={facultyEmail} 
-                  onChange={handleFacultyEmailChange} 
-                  placeholder="Faculty Email" 
-                  style={input} 
-                />
+        <div style={styles.main}>
+          <div style={styles.card}>
+            <h2 style={styles.title}>Enter Details</h2>
+            <p style={styles.subtitle}>
+              Send request for admin approval
+            </p>
+
+            <form onSubmit={handleSubmit}>
+              {loginType === "faculty" && (
+                <div style={styles.section}>
+                  <div style={styles.sectionTitle}>
+                    Faculty Details
+                  </div>
+
+                  <div style={styles.row}>
+                    <label style={styles.label}>
+                      Faculty Name
+                      <input
+                        style={styles.input}
+                        value={facultyName}
+                        onChange={(e) =>
+                          setFacultyName(e.target.value)
+                        }
+                      />
+                    </label>
+
+                    <label style={styles.label}>
+                      Faculty Email
+                      <input
+                        type="email"
+                        style={styles.input}
+                        value={facultyEmail}
+                        onChange={(e) =>
+                          setFacultyEmail(e.target.value)
+                        }
+                      />
+                    </label>
+                  </div>
+
+                  <div style={styles.row}>
+                    <label style={styles.label}>
+                      Faculty ID
+                      <input
+                        style={styles.input}
+                        value={facultyId}
+                        onChange={(e) =>
+                          setFacultyId(e.target.value)
+                        }
+                      />
+                    </label>
+
+                    <label style={styles.label}>
+                      Department
+                      <input
+                        style={styles.input}
+                        value={facultyDepartment}
+                        onChange={(e) =>
+                          setFacultyDepartment(e.target.value)
+                        }
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              <div style={styles.section}>
+                <div style={styles.sectionTitle}>
+                  Guest Details
+                </div>
+
+                <div style={styles.row}>
+                  <label style={styles.label}>
+                    Guest Name
+                    <input
+                      name="guestName"
+                      style={styles.input}
+                      value={guestForm.guestName}
+                      onChange={handleGuestChange}
+                    />
+                  </label>
+
+                  <label style={styles.label}>
+                    Guest Email
+                    <input
+                      name="guestEmail"
+                      type="email"
+                      required
+                      style={styles.input}
+                      value={guestForm.guestEmail}
+                      onChange={handleGuestChange}
+                    />
+                  </label>
+                </div>
+
+                <div style={styles.row}>
+                  <label style={styles.label}>
+                    Phone
+                    <input
+                      name="guestPhone"
+                      style={styles.input}
+                      value={guestForm.guestPhone}
+                      onChange={handleGuestChange}
+                    />
+                  </label>
+
+                  <label style={styles.label}>
+                    Visit Date
+                    <input
+                      name="visitDate"
+                      type="date"
+                      style={styles.input}
+                      value={guestForm.visitDate}
+                      onChange={handleGuestChange}
+                    />
+                  </label>
+                </div>
+
+                <label style={styles.label}>
+                  Purpose
+                  <textarea
+                    name="purpose"
+                    style={styles.textarea}
+                    value={guestForm.purpose}
+                    onChange={handleGuestChange}
+                  />
+                </label>
+
+                <button style={styles.submit} disabled={loading}>
+                  {loading ? "Submitting..." : "Send Request"}
+                </button>
               </div>
-              <div style={row}>
-                <input 
-                  value={facultyId} 
-                  onChange={handleFacultyIdChange} 
-                  placeholder="Faculty ID" 
-                  style={input} 
-                />
-                <input 
-                  value={facultyDepartment} 
-                  onChange={handleFacultyDepartmentChange} 
-                  placeholder="Department" 
-                  style={input} 
-                />
+            </form>
+
+            {message.text && (
+              <div
+                style={
+                  message.type === "success"
+                    ? styles.success
+                    : styles.error
+                }
+              >
+                {message.text}
               </div>
-            </div>
-          )}
+            )}
 
-          <div style={section}>
-            <div style={sectionTitle}>Guest Details</div>
-            <div style={row}>
-              <input 
-                name="guestName" 
-                value={guestForm.guestName} 
-                onChange={handleGuestChange} 
-                placeholder="Guest Name" 
-                style={input} 
-              />
-              <input 
-                name="guestEmail" 
-                type="email" 
-                value={guestForm.guestEmail} 
-                onChange={handleGuestChange} 
-                placeholder="Guest Email (required)" 
-                style={input} 
-                required 
-              />
-            </div>
-            <div style={row}>
-              <input 
-                name="guestPhone" 
-                value={guestForm.guestPhone} 
-                onChange={handleGuestChange} 
-                placeholder="Guest Phone Number" 
-                style={input} 
-              />
-              <input 
-                name="visitDate" 
-                type="date" 
-                value={guestForm.visitDate} 
-                onChange={handleGuestChange} 
-                style={input} 
-              />
-            </div>
-            <div>
-              <textarea 
-                name="purpose" 
-                value={guestForm.purpose} 
-                onChange={handleGuestChange} 
-                placeholder="Purpose of Visit" 
-                style={textarea} 
-              />
-            </div>
-
-            <button type="submit" style={submit} disabled={loading}>
-              {loading ? "Submitting..." : "Send Request"}
-            </button>
+            {showNotice && (
+              <div style={styles.confirm}>
+                <strong>Notice:</strong>
+                <div style={{ marginTop: 8 }}>
+                  Please provide required details.
+                </div>
+              </div>
+            )}
           </div>
-        </form>
-
-        <div>
-          {message.text && (
-            <div style={message.type === "success" ? successCard : errorCard}>
-              {message.text}
-            </div>
-          )}
-
-          {showNotice && submitted.length === 0 && (
-            <div style={confirmCard}>
-              <strong>Notice:</strong>
-              <div style={{ marginTop: 8 }}>
-                {loginType === "faculty"
-                  ? "Please provide Faculty ID, Faculty Name, and Guest Email to submit a request."
-                  : "Please provide a Guest Email to submit a request."}
-              </div>
-            </div>
-          )}
-
-          {submitted.map((s) => (
-            <div key={s.id} style={confirmCard}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontWeight: 700 }}>{s.guestName}</div>
-                <div style={{ color: colors.accent, fontWeight: 700 }}>{s.status}</div>
-              </div>
-              <div style={{ marginTop: 8 }}>
-                {s.invitedByRole === "faculty" && (
-                  <>
-                    <div><strong style={{ color: colors.textDark }}>Faculty:</strong> {s.facultyName}</div>
-                    <div><strong style={{ color: colors.textDark }}>Faculty ID:</strong> {s.facultyId}</div>
-                    <div><strong style={{ color: colors.textDark }}>Department:</strong> {s.facultyDepartment || "—"}</div>
-                  </>
-                )}
-                <div><strong style={{ color: colors.textDark }}>Email:</strong> {s.guestEmail}</div>
-                <div><strong style={{ color: colors.textDark }}>Visit Date:</strong> {s.visitDate}</div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>

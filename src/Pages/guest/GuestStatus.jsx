@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import GuestSidebar from "../../components/GuestSidebar";
 
 const vars = {
@@ -99,45 +99,69 @@ const styles = {
 };
 
 const GuestStatus = () => {
-  const requests = [
-    {
-      id: "REQ-101",
-      guestName: "John Doe",
-      purpose: "Campus tour and admissions meeting",
-      visitingDate: "2025-02-15",
-      assignedAttendee: "Dr. Jane Smith",
-      status: "Approved",
-    },
-    {
-      id: "REQ-102",
-      guestName: "John Doe",
-      purpose: "Guest lecture discussion",
-      visitingDate: "2025-02-20",
-      assignedAttendee: null,
-      status: "Pending",
-    },
-    {
-      id: "REQ-103",
-      guestName: "John Doe",
-      purpose: "Vendor meeting",
-      visitingDate: "2025-02-10",
-      assignedAttendee: null,
-      status: "Denied",
-    },
-  ];
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const getBadgeStyle = (status) =>
-    status === "Approved"
-      ? styles.badgeApproved
-      : status === "Denied"
-      ? styles.badgeDenied
-      : styles.badgePending;
+useEffect(() => {
+  const fetchRequests = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // ✅ FIRST get phone from localStorage
+      const guestPhone = localStorage.getItem("guestPhone");
+
+      if (!guestPhone) {
+        setError("Guest phone not found. Please login again.");
+        setLoading(false);
+        return;
+      }
+
+      // ✅ Call backend API (already filtered by phone)
+      const res = await fetch(
+        `http://localhost:8000/api/visitors/guest/${guestPhone}`
+      );
+
+      if (!res.ok) throw new Error("Failed to fetch visitor data");
+
+      const result = await res.json();
+
+      const visitors = Array.isArray(result.data) ? result.data : [];
+
+      // ✅ Directly set
+      setRequests(visitors);
+
+    } catch (err) {
+      setError(err.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchRequests();
+}, []);
+
+  // Badge color logic (do not break existing UI)
+  const getBadgeStyle = (status) => {
+    const s = (status || "").toLowerCase();
+    if (s === "approved") {
+      return { ...styles.badgeApproved, background: "#22c55e", color: "#fff" };
+    }
+    if (s === "pending") {
+      return { ...styles.badgePending, background: "#f59e42", color: "#fff" };
+    }
+    if (s === "rejected") {
+      return { ...styles.badgeDenied, background: "#ef4444", color: "#fff" };
+    }
+    // fallback to original
+    return styles.badgePending;
+  };
 
   return (
     <div style={styles.page}>
       <div style={styles.layout}>
         <GuestSidebar />
-
         <div style={styles.main}>
           <div style={styles.header}>
             <h1 style={styles.title}>My Requests</h1>
@@ -145,45 +169,54 @@ const GuestStatus = () => {
               Track the status of all visit requests you have submitted
             </p>
           </div>
-
           <div style={styles.list}>
-            {requests.map((req) => (
-              <div key={req.id} style={styles.card}>
-                <div style={styles.row}>
-                  <span style={styles.label}>Request ID</span>
-                  <span>{req.id}</span>
-                </div>
-
-                <div style={styles.row}>
-                  <span style={styles.label}>Purpose</span>
-                  <span style={styles.purpose}>{req.purpose}</span>
-                </div>
-
-                <div style={styles.row}>
-                  <span style={styles.label}>Visiting Date</span>
-                  <span>{req.visitingDate}</span>
-                </div>
-
-                {req.assignedAttendee && (
-                  <div style={styles.row}>
-                    <span style={styles.label}>Attendee</span>
-                    <span>{req.assignedAttendee}</span>
-                  </div>
-                )}
-
-                <div style={{ ...styles.row, ...styles.rowSpaced }}>
-                  <span style={styles.label}>Status</span>
-                  <span
-                    style={{
-                      ...styles.badge,
-                      ...getBadgeStyle(req.status),
-                    }}
-                  >
-                    {req.status}
-                  </span>
-                </div>
+            {loading ? (
+              <div style={{ color: vars.muted, textAlign: "center", padding: 40 }}>
+                Loading...
               </div>
-            ))}
+            ) : error ? (
+              <div style={{ color: "#ef4444", textAlign: "center", padding: 40 }}>
+                {error}
+              </div>
+            ) : requests.length === 0 ? (
+              <div style={{ color: vars.muted, textAlign: "center", padding: 40 }}>
+                No visit requests found.
+              </div>
+            ) : (
+              requests.map((req) => (
+                <div key={req._id || req.id} style={styles.card}>
+                  <div style={styles.row}>
+                    <span style={styles.label}>Request ID</span>
+                    <span>{req._id || req.id}</span>
+                  </div>
+                  <div style={styles.row}>
+                    <span style={styles.label}>Purpose</span>
+                    <span style={styles.purpose}>{req.purpose}</span>
+                  </div>
+                  <div style={styles.row}>
+                    <span style={styles.label}>Visiting Date</span>
+                    <span>{new Date(req.visitDate).toLocaleDateString()}</span>
+                  </div>
+                  {req.assignedAttendee && (
+                    <div style={styles.row}>
+                      <span style={styles.label}>Attendee</span>
+                      <span>{req.assignedAttendee}</span>
+                    </div>
+                  )}
+                  <div style={{ ...styles.row, ...styles.rowSpaced }}>
+                    <span style={styles.label}>Status</span>
+                    <span
+                      style={{
+                        ...styles.badge,
+                        ...getBadgeStyle(req.status),
+                      }}
+                    >
+                      {req.status ? req.status.charAt(0).toUpperCase() + req.status.slice(1) : ""}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

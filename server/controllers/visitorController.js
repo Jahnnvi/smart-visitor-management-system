@@ -2,19 +2,42 @@ const Visitor = require('../models/Visitor');
 
 // Create a new visitor request
 exports.createVisitorRequest = async (req, res) => {
+  console.log("---- CREATE VISITOR START ----");
+
   try {
+    if (!req.body) {
+      console.log("❌ No body received");
+      return res.status(400).json({ message: "No data received" });
+    }
+
+    console.log("📦 Request Body:", JSON.stringify(req.body, null, 2));
+
     const visitor = new Visitor(req.body);
+
+    console.log("🛠 Validating visitor...");
+    await visitor.validate();
+
+    console.log("💾 Saving to DB...");
     const savedVisitor = await visitor.save();
+
+    console.log("✅ Saved Successfully:", savedVisitor.visitorId);
+    console.log("---- CREATE VISITOR END ----");
+
     res.status(201).json({
       success: true,
-      message: 'Visitor request created successfully',
       data: savedVisitor,
     });
+
   } catch (error) {
+    console.log("🔥 CREATE VISITOR FAILED");
+    console.log("Error Name:", error.name);
+    console.log("Error Message:", error.message);
+    console.log("Full Error:", error);
+    console.log("---- CREATE VISITOR END ----");
+
     res.status(400).json({
       success: false,
-      message: 'Error creating visitor request',
-      error: error.message,
+      message: error.message,
     });
   }
 };
@@ -33,6 +56,27 @@ exports.getAllRequests = async (req, res) => {
       success: false,
       message: 'Error retrieving visitor requests',
       error: error.message,
+    });
+  }
+};
+// GET requests by guest phone
+exports.getRequestsByPhone = async (req, res) => {
+  try {
+    const { phone } = req.params;
+
+    const visitors = await Visitor.find({
+      guestPhone: phone,
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: visitors,
+    });
+  } catch (error) {
+    console.error("Error fetching guest requests by phone:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching guest requests",
     });
   }
 };

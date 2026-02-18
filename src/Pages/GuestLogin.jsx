@@ -170,25 +170,32 @@ export default function GuestLogin() {
     setOtpSent(true);
   }
 
-  function handleVerifyOtp(e) {
-    e.preventDefault();
-    setErrors({});
-    if (!otp.trim()) {
-      setErrors({ otp: "OTP is required" });
-      return;
-    }
-    if (!/^\d{6}$/.test(otp.trim())) {
-      setErrors({ otp: "OTP must be 6 digits" });
-      return;
-    }
-    login(); 
-    navigate("/guest", { 
-      state: { 
-        loginRole: "guest",
-        guestMobile: mobile 
-      } 
-    });
+ function handleVerifyOtp(e) {
+  e.preventDefault();
+  setErrors({});
+
+  if (!otp.trim()) {
+    setErrors({ otp: "OTP is required" });
+    return;
   }
+
+  if (!/^\d{6}$/.test(otp.trim())) {
+    setErrors({ otp: "OTP must be 6 digits" });
+    return;
+  }
+
+  // ✅ STORE PHONE FOR STATUS PAGE
+  localStorage.setItem("guestPhone", mobile);
+
+  login();
+
+  navigate("/guest", { 
+    state: { 
+      loginRole: "guest",
+      guestMobile: mobile 
+    } 
+  });
+}
 
   // Faculty mode handlers
   function handleFacultyLogin(e) {
