@@ -7,6 +7,7 @@ const {
   getVisitorByVisitorId,
   updateVisitorStatus,
   getTodayGateLogs,
+  getRequestsByPhone,
 } = require('../controllers/visitorController');
 
 // POST - Create visitor
@@ -17,6 +18,8 @@ router.get('/', getAllRequests);
 
 // GET - Today's logs
 router.get('/logs/today', getTodayGateLogs);
+
+router.get("/guest/:phone", getRequestsByPhone);
 
 // GET - Single visitor
 router.get('/:visitorId', getVisitorByVisitorId);
