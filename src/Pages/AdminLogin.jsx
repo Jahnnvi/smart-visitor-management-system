@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/Authcontext";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,6 +20,7 @@ const AdminLogin = () => {
       setError("Password is required");
       return;
     }
+    login({ role: "admin", email });
     navigate("/admin");
   };
 
