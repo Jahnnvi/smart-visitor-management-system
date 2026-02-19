@@ -5,7 +5,7 @@ const visitorSchema = new mongoose.Schema(
     // Who created the request
     createdByRole: {
       type: String,
-      enum: ["guest", "faculty"],
+      enum: ["guest", "faculty","security"],
       required: true,
     },
 

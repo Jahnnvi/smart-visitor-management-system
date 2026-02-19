@@ -12,10 +12,15 @@ const {
   // NEW
   checkInVisitor,
   checkOutVisitor,
+  //new
+  createWalkInVisitor,
 } = require("../controllers/visitorController");
 
 // POST - Create visitor
 router.post("/", createVisitorRequest);
+
+//POST - Walk in visitor
+router.post("/walkin", createWalkInVisitor);
 
 // GET - All visitors
 router.get("/", getAllRequests);

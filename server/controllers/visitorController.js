@@ -357,3 +357,82 @@ exports.getTodayGateLogs = async (req, res) => {
     });
   }
 };
+
+/* =========================================================
+   NEW: ON‑THE‑SPOT ENTRY (WALK‑IN)
+   ========================================================= */
+exports.createWalkInVisitor = async (req, res) => {
+  try {
+    const {
+      visitorName,      // guestName
+      phone,            // guestPhone
+      type,             // "Parent" or "Campus Visitor"
+      studentName,      // required if type === "Parent"
+      studentId,        // required if type === "Parent"
+      reason,           // purpose
+    } = req.body;
+
+    // Basic validation
+    if (!visitorName || !phone || !type || !reason) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: visitorName, phone, type, reason",
+      });
+    }
+
+    if (type === "Parent" && (!studentName || !studentId)) {
+      return res.status(400).json({
+        success: false,
+        message: "For parent visits, student name and ID are required",
+      });
+    }
+
+    // Prepare data for Visitor model
+    const visitorData = {
+      createdByRole: "security",           // new role
+      guestName: visitorName,
+      guestPhone: phone,
+      purpose: reason,
+      visitDate: new Date(),                // today
+      status: "checked-in",                  // immediate check‑in
+      // For parent visits, store extra info in purpose or a new field
+      // We can append student details to purpose for now
+      purpose: type === "Parent"
+        ? `${reason} (Student: ${studentName}, ID: ${studentId})`
+        : reason,
+      // Optionally store student info in a separate field if you add to schema
+    };
+
+    // Create visitor entry
+    const visitor = new Visitor(visitorData);
+    await visitor.save();
+
+    // Create log entry
+    const log = await VisitorLog.create({
+      visitorId: visitor.visitorId,
+      guestName: visitor.guestName,
+      guestPhone: visitor.guestPhone,
+      visitorType: "On-the-Spot",
+      purpose: visitor.purpose,
+      visitDate: visitor.visitDate,
+      checkInTime: new Date(),
+      status: "checked-in",
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Walk‑in visitor checked in successfully",
+      data: {
+        visitor,
+        log,
+      },
+    });
+  } catch (error) {
+    console.error("Error creating walk‑in visitor:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error creating walk‑in visitor",
+      error: error.message,
+    });
+  }
+};
