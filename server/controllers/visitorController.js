@@ -61,12 +61,25 @@ exports.getAllRequests = async (req, res) => {
 };
 
 // GET requests by guest phone
+// GET requests by guest phone (ONLY TODAY)
 exports.getRequestsByPhone = async (req, res) => {
   try {
     const { phone } = req.params;
 
+    // Start of today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Start of tomorrow
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
     const visitors = await Visitor.find({
       guestPhone: phone,
+      visitDate: {
+        $gte: today,
+        $lt: tomorrow,
+      },
     }).sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -81,6 +94,8 @@ exports.getRequestsByPhone = async (req, res) => {
     });
   }
 };
+
+
 
 // Get visitor by visitorId
 exports.getVisitorByVisitorId = async (req, res) => {

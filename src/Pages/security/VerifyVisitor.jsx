@@ -10,123 +10,62 @@ export default function VerifyVisitor() {
     border: "#E5E4E3",
   };
 
+  // This input is now used as PHONE NUMBER (digits only)
   const [visitorId, setVisitorId] = useState("");
   const [requestId, setRequestId] = useState(""); // kept for UI only
-  const [visitor, setVisitor] = useState(null);
+
+  const [requests, setRequests] = useState([]); // list of requests for today
+  const [selectedVisitorId, setSelectedVisitorId] = useState("");
+
+  const [visitor, setVisitor] = useState(null); // selected request details
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function isToday(dateString) {
-    const d = new Date(dateString);
-    const today = new Date();
-
-    d.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-
-    return d.getTime() === today.getTime();
+  function normalizePhoneDigits(value) {
+    return value.replace(/\D/g, "");
   }
 
   async function handleVerify(e) {
     e.preventDefault();
     setError("");
     setVisitor(null);
+    setRequests([]);
+    setSelectedVisitorId("");
 
-    const key = visitorId.trim();
+    const phone = normalizePhoneDigits(visitorId);
 
-    if (!key) {
-      setError("Enter visitor id or request ID to verify.");
+    if (!phone) {
+      setError("Enter guest phone number to verify.");
       return;
     }
 
     try {
       setLoading(true);
 
-      const res = await fetch(`http://localhost:8000/api/visitors/${key}`);
+      const res = await fetch(
+        `http://localhost:8000/api/visitors/guest/${phone}`
+      );
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setError(data.message || "Visitor not found");
+        setError(data.message || "Could not fetch requests");
         return;
       }
 
-      const v = data.data;
+      const list = data.data || [];
 
-      // Validate: status must be approved
-      if (v.status !== "approved") {
-        setVisitor({
-          guestName: v.guestName,
-          visitorId: v.visitorId,
-          visitorType: "Pre-Registered",
-          purpose: v.purpose,
-          assignedHost: v.facultyName || "-",
-          visitDate: new Date(v.visitDate).toLocaleDateString(),
-          approvalStatus: "Denied",
-          checkedIn: false,
-          requestId: requestId || "-",
-          raw: v,
-        });
-
-        setError(
-          `Not allowed. Visitor status is "${v.status}". Must be approved.`
-        );
+      if (list.length === 0) {
+        setError("No visitor requests found for today for this phone number.");
         return;
       }
 
-      // Validate: visitDate must be today
-      if (!isToday(v.visitDate)) {
-        setVisitor({
-          guestName: v.guestName,
-          visitorId: v.visitorId,
-          visitorType: "Pre-Registered",
-          purpose: v.purpose,
-          assignedHost: v.facultyName || "-",
-          visitDate: new Date(v.visitDate).toLocaleDateString(),
-          approvalStatus: "Denied",
-          checkedIn: false,
-          requestId: requestId || "-",
-          raw: v,
-        });
+      // Save list, and auto-select the newest one
+      setRequests(list);
+      setSelectedVisitorId(list[0].visitorId);
 
-        setError("Not allowed. Visitor is not scheduled for today.");
-        return;
-      }
+      // show details of first request
+      const v = list[0];
 
-      // If already checked-in or checked-out
-      if (v.status === "checked-in") {
-        setVisitor({
-          guestName: v.guestName,
-          visitorId: v.visitorId,
-          visitorType: "Pre-Registered",
-          purpose: v.purpose,
-          assignedHost: v.facultyName || "-",
-          visitDate: new Date(v.visitDate).toLocaleDateString(),
-          approvalStatus: "Checked In",
-          checkedIn: true,
-          requestId: requestId || "-",
-          raw: v,
-        });
-        return;
-      }
-
-      if (v.status === "checked-out") {
-        setVisitor({
-          guestName: v.guestName,
-          visitorId: v.visitorId,
-          visitorType: "Pre-Registered",
-          purpose: v.purpose,
-          assignedHost: v.facultyName || "-",
-          visitDate: new Date(v.visitDate).toLocaleDateString(),
-          approvalStatus: "Denied",
-          checkedIn: true,
-          requestId: requestId || "-",
-          raw: v,
-        });
-
-        setError("Visitor already checked out.");
-        return;
-      }
-
-      // Valid approved visitor for today
       setVisitor({
         guestName: v.guestName,
         visitorId: v.visitorId,
@@ -134,8 +73,13 @@ export default function VerifyVisitor() {
         purpose: v.purpose,
         assignedHost: v.facultyName || "-",
         visitDate: new Date(v.visitDate).toLocaleDateString(),
-        approvalStatus: "Approved",
-        checkedIn: false,
+        approvalStatus:
+          v.status === "approved"
+            ? "Approved"
+            : v.status === "checked-in"
+            ? "Checked In"
+            : "Denied",
+        checkedIn: v.status === "checked-in",
         requestId: requestId || "-",
         raw: v,
       });
@@ -146,9 +90,42 @@ export default function VerifyVisitor() {
     }
   }
 
+  function handleSelectRequest(newVisitorId) {
+    setSelectedVisitorId(newVisitorId);
+
+    const v = requests.find((x) => x.visitorId === newVisitorId);
+    if (!v) return;
+
+    setVisitor({
+      guestName: v.guestName,
+      visitorId: v.visitorId,
+      visitorType: "Pre-Registered",
+      purpose: v.purpose,
+      assignedHost: v.facultyName || "-",
+      visitDate: new Date(v.visitDate).toLocaleDateString(),
+      approvalStatus:
+        v.status === "approved"
+          ? "Approved"
+          : v.status === "checked-in"
+          ? "Checked In"
+          : "Denied",
+      checkedIn: v.status === "checked-in",
+      requestId: requestId || "-",
+      raw: v,
+    });
+  }
+
   async function handleAllowEntry() {
     if (!visitor) return;
     setError("");
+
+    // must be approved to check in
+    if (visitor.raw.status !== "approved") {
+      setError(
+        `Cannot check in. Visitor status is "${visitor.raw.status}". Must be approved.`
+      );
+      return;
+    }
 
     try {
       setLoading(true);
@@ -168,11 +145,22 @@ export default function VerifyVisitor() {
         return;
       }
 
+      // Update UI state
       setVisitor({
         ...visitor,
         approvalStatus: "Checked In",
         checkedIn: true,
+        raw: { ...visitor.raw, status: "checked-in" },
       });
+
+      // Update list also so dropdown reflects checked-in
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.visitorId === visitor.visitorId
+            ? { ...r, status: "checked-in" }
+            : r
+        )
+      );
     } catch (err) {
       setError("Backend not reachable. Is server running on port 8000?");
     } finally {
@@ -204,8 +192,8 @@ export default function VerifyVisitor() {
   const mainStyle = {
     flex: 1,
     display: "flex",
-    alignItems: "center", // vertical center
-    justifyContent: "center", // horizontal center
+    alignItems: "center",
+    justifyContent: "center",
   };
 
   /* ---- EXISTING UI STYLES (UNCHANGED) ---- */
@@ -277,13 +265,7 @@ export default function VerifyVisitor() {
   };
 
   const infoRow = (label, value) => (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        padding: "6px 0",
-      }}
-    >
+    <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0" }}>
       <div style={{ color: "#6b6b6b", fontSize: 13 }}>{label}</div>
       <div style={{ fontWeight: 600 }}>{value}</div>
     </div>
@@ -292,7 +274,6 @@ export default function VerifyVisitor() {
   return (
     <div style={pageStyle}>
       <div style={layoutStyle}>
-        {/* ✅ Security Sidebar added */}
         <SecuritySidebar />
 
         <div style={mainStyle}>
@@ -304,12 +285,12 @@ export default function VerifyVisitor() {
               </div>
 
               <form onSubmit={handleVerify}>
-                <label style={labelStyle}>Visitor ID</label>
+                <label style={labelStyle}>Visitor Mobile Number</label>
                 <input
                   style={inputStyle}
                   value={visitorId}
                   onChange={(e) => setVisitorId(e.target.value)}
-                  placeholder="Enter visitor id"
+                  placeholder="Enter guest phone number (digits only)"
                 />
 
                 <label style={labelStyle}>Request ID (optional)</label>
@@ -321,7 +302,7 @@ export default function VerifyVisitor() {
                 />
 
                 <button type="submit" style={buttonStyle} disabled={loading}>
-                  {loading ? "Verifying..." : "Verify Visitor"}
+                  {loading ? "Searching..." : "Verify Visitor"}
                 </button>
               </form>
 
@@ -336,6 +317,24 @@ export default function VerifyVisitor() {
                   }}
                 >
                   {error}
+                </div>
+              )}
+
+              {/* Dropdown to pick correct request (only if multiple) */}
+              {requests.length > 0 && (
+                <div style={{ marginTop: 16 }}>
+                  <label style={labelStyle}>Select Request (Visitor ID)</label>
+                  <select
+                    style={inputStyle}
+                    value={selectedVisitorId}
+                    onChange={(e) => handleSelectRequest(e.target.value)}
+                  >
+                    {requests.map((r) => (
+                      <option key={r.visitorId} value={r.visitorId}>
+                        {r.visitorId} ({r.status})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 
@@ -354,13 +353,7 @@ export default function VerifyVisitor() {
 
                   <div style={{ marginTop: 10 }}>
                     {visitor.approvalStatus === "Approved" && (
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 10,
-                          alignItems: "center",
-                        }}
-                      >
+                      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                         <div
                           style={{
                             background: PALETTE.accent,
@@ -389,6 +382,10 @@ export default function VerifyVisitor() {
                       </div>
                     )}
 
+                    {visitor.approvalStatus === "Checked In" && (
+                      <div style={{ fontWeight: 700 }}>Checked In</div>
+                    )}
+
                     {visitor.approvalStatus === "Denied" && (
                       <div
                         style={{
@@ -401,10 +398,6 @@ export default function VerifyVisitor() {
                       >
                         Entry Denied
                       </div>
-                    )}
-
-                    {visitor.approvalStatus === "Checked In" && (
-                      <div style={{ fontWeight: 700 }}>Checked In</div>
                     )}
                   </div>
                 </div>
@@ -423,9 +416,9 @@ export default function VerifyVisitor() {
                 Gate Tools
               </div>
               <div style={{ color: "#ccc", fontSize: 13, lineHeight: 1.5 }}>
-                - Verify using visitor id or optional Request ID.
-                <br />- Approved visitors can be checked in from this panel.
-                <br />- For any issues, contact the front desk or admin office.
+                - Verify using guest phone number (digits only).
+                <br />- Only today's requests are shown.
+                <br />- Select the correct visitorId and allow entry.
               </div>
             </div>
           </div>
