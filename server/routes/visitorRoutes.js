@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
 const {
@@ -8,23 +8,34 @@ const {
   updateVisitorStatus,
   getTodayGateLogs,
   getRequestsByPhone,
-} = require('../controllers/visitorController');
+
+  // NEW
+  checkInVisitor,
+  checkOutVisitor,
+} = require("../controllers/visitorController");
 
 // POST - Create visitor
-router.post('/', createVisitorRequest);
+router.post("/", createVisitorRequest);
 
 // GET - All visitors
-router.get('/', getAllRequests);
+router.get("/", getAllRequests);
 
-// GET - Today's logs
-router.get('/logs/today', getTodayGateLogs);
+// GET - Today's logs (NOW FROM visitor_logs)
+router.get("/logs/today", getTodayGateLogs);
 
+// Guest requests by phone
 router.get("/guest/:phone", getRequestsByPhone);
 
-// GET - Single visitor
-router.get('/:visitorId', getVisitorByVisitorId);
+// NEW: Check-in visitor (Security)
+router.post("/:visitorId/checkin", checkInVisitor);
 
-// PUT - Update status
+// NEW: Check-out visitor (Security)
+router.put("/:visitorId/checkout", checkOutVisitor);
+
+// GET - Single visitor
+router.get("/:visitorId", getVisitorByVisitorId);
+
+// PUT - Update status (Admin etc.)
 router.put("/:visitorId/status", updateVisitorStatus);
 
 module.exports = router;

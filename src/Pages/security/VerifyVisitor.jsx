@@ -11,49 +11,173 @@ export default function VerifyVisitor() {
   };
 
   const [visitorId, setVisitorId] = useState("");
-  const [requestId, setRequestId] = useState("");
+  const [requestId, setRequestId] = useState(""); // kept for UI only
   const [visitor, setVisitor] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function determineStatus(source) {
-    const digits = source.replace(/\D/g, "");
-    if (!digits) return "Denied";
-    const last = parseInt(digits[digits.length - 1], 10);
-    if (Number.isNaN(last)) return "Denied";
-    return last % 2 === 0 ? "Approved" : "Denied";
+  function isToday(dateString) {
+    const d = new Date(dateString);
+    const today = new Date();
+
+    d.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    return d.getTime() === today.getTime();
   }
 
-  function handleVerify(e) {
+  async function handleVerify(e) {
     e.preventDefault();
     setError("");
+    setVisitor(null);
 
-    const key = visitorId.trim() || requestId.trim();
+    const key = visitorId.trim();
+
     if (!key) {
-      setVisitor(null);
       setError("Enter visitor id or request ID to verify.");
       return;
     }
 
-    const status = determineStatus(key);
+    try {
+      setLoading(true);
 
-    const mock = {
-      guestName: "Alex Morgan",
-      visitorId: visitorId || "+1 555 0123",
-      visitorType: "Pre-Registered",
-      purpose: "Campus Meeting - Orientation",
-      assignedHost: "Dr. Priya Sharma",
-      visitDate: new Date().toLocaleString(),
-      approvalStatus: status,
-      checkedIn: false,
-      requestId: requestId || "REQ-" + Math.floor(Math.random() * 90000 + 10000),
-    };
+      const res = await fetch(`http://localhost:8000/api/visitors/${key}`);
+      const data = await res.json();
 
-    setVisitor(mock);
+      if (!res.ok || !data.success) {
+        setError(data.message || "Visitor not found");
+        return;
+      }
+
+      const v = data.data;
+
+      // Validate: status must be approved
+      if (v.status !== "approved") {
+        setVisitor({
+          guestName: v.guestName,
+          visitorId: v.visitorId,
+          visitorType: "Pre-Registered",
+          purpose: v.purpose,
+          assignedHost: v.facultyName || "-",
+          visitDate: new Date(v.visitDate).toLocaleDateString(),
+          approvalStatus: "Denied",
+          checkedIn: false,
+          requestId: requestId || "-",
+          raw: v,
+        });
+
+        setError(
+          `Not allowed. Visitor status is "${v.status}". Must be approved.`
+        );
+        return;
+      }
+
+      // Validate: visitDate must be today
+      if (!isToday(v.visitDate)) {
+        setVisitor({
+          guestName: v.guestName,
+          visitorId: v.visitorId,
+          visitorType: "Pre-Registered",
+          purpose: v.purpose,
+          assignedHost: v.facultyName || "-",
+          visitDate: new Date(v.visitDate).toLocaleDateString(),
+          approvalStatus: "Denied",
+          checkedIn: false,
+          requestId: requestId || "-",
+          raw: v,
+        });
+
+        setError("Not allowed. Visitor is not scheduled for today.");
+        return;
+      }
+
+      // If already checked-in or checked-out
+      if (v.status === "checked-in") {
+        setVisitor({
+          guestName: v.guestName,
+          visitorId: v.visitorId,
+          visitorType: "Pre-Registered",
+          purpose: v.purpose,
+          assignedHost: v.facultyName || "-",
+          visitDate: new Date(v.visitDate).toLocaleDateString(),
+          approvalStatus: "Checked In",
+          checkedIn: true,
+          requestId: requestId || "-",
+          raw: v,
+        });
+        return;
+      }
+
+      if (v.status === "checked-out") {
+        setVisitor({
+          guestName: v.guestName,
+          visitorId: v.visitorId,
+          visitorType: "Pre-Registered",
+          purpose: v.purpose,
+          assignedHost: v.facultyName || "-",
+          visitDate: new Date(v.visitDate).toLocaleDateString(),
+          approvalStatus: "Denied",
+          checkedIn: true,
+          requestId: requestId || "-",
+          raw: v,
+        });
+
+        setError("Visitor already checked out.");
+        return;
+      }
+
+      // Valid approved visitor for today
+      setVisitor({
+        guestName: v.guestName,
+        visitorId: v.visitorId,
+        visitorType: "Pre-Registered",
+        purpose: v.purpose,
+        assignedHost: v.facultyName || "-",
+        visitDate: new Date(v.visitDate).toLocaleDateString(),
+        approvalStatus: "Approved",
+        checkedIn: false,
+        requestId: requestId || "-",
+        raw: v,
+      });
+    } catch (err) {
+      setError("Backend not reachable. Is server running on port 8000?");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function handleAllowEntry() {
+  async function handleAllowEntry() {
     if (!visitor) return;
-    setVisitor({ ...visitor, approvalStatus: "Checked In", checkedIn: true });
+    setError("");
+
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `http://localhost:8000/api/visitors/${visitor.visitorId}/checkin`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(data.message || "Check-in failed");
+        return;
+      }
+
+      setVisitor({
+        ...visitor,
+        approvalStatus: "Checked In",
+        checkedIn: true,
+      });
+    } catch (err) {
+      setError("Backend not reachable. Is server running on port 8000?");
+    } finally {
+      setLoading(false);
+    }
   }
 
   /* ---- LAYOUT STYLES (MATCH GuestRequest) ---- */
@@ -78,12 +202,11 @@ export default function VerifyVisitor() {
   };
 
   const mainStyle = {
-  flex: 1,
-  display: "flex",
-  alignItems: "center",     // vertical center
-  justifyContent: "center" // horizontal center
-};
-
+    flex: 1,
+    display: "flex",
+    alignItems: "center", // vertical center
+    justifyContent: "center", // horizontal center
+  };
 
   /* ---- EXISTING UI STYLES (UNCHANGED) ---- */
 
@@ -96,8 +219,7 @@ export default function VerifyVisitor() {
     overflow: "hidden",
     display: "flex",
     flexDirection: "row",
-	border: `1px solid ${PALETTE.border}`,
-	
+    border: `1px solid ${PALETTE.border}`,
   };
 
   const leftStyle = {
@@ -116,7 +238,12 @@ export default function VerifyVisitor() {
   const titleStyle = { margin: 0, fontSize: 28, color: PALETTE.accent };
   const subtitleStyle = { marginTop: 6, marginBottom: 18, color: "#ddd" };
 
-  const labelStyle = { display: "block", color: "#ddd", marginBottom: 6, fontSize: 13 };
+  const labelStyle = {
+    display: "block",
+    color: "#ddd",
+    marginBottom: 6,
+    fontSize: 13,
+  };
   const inputStyle = {
     width: "100%",
     padding: "10px 12px",
@@ -150,7 +277,13 @@ export default function VerifyVisitor() {
   };
 
   const infoRow = (label, value) => (
-    <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0" }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        padding: "6px 0",
+      }}
+    >
       <div style={{ color: "#6b6b6b", fontSize: 13 }}>{label}</div>
       <div style={{ fontWeight: 600 }}>{value}</div>
     </div>
@@ -187,8 +320,8 @@ export default function VerifyVisitor() {
                   placeholder="Optional request ID"
                 />
 
-                <button type="submit" style={buttonStyle}>
-                  Verify Visitor
+                <button type="submit" style={buttonStyle} disabled={loading}>
+                  {loading ? "Verifying..." : "Verify Visitor"}
                 </button>
               </form>
 
@@ -221,7 +354,13 @@ export default function VerifyVisitor() {
 
                   <div style={{ marginTop: 10 }}>
                     {visitor.approvalStatus === "Approved" && (
-                      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 10,
+                          alignItems: "center",
+                        }}
+                      >
                         <div
                           style={{
                             background: PALETTE.accent,
@@ -233,14 +372,17 @@ export default function VerifyVisitor() {
                         >
                           Approved
                         </div>
+
                         {!visitor.checkedIn && (
                           <button
                             onClick={handleAllowEntry}
                             style={{ ...buttonStyle, padding: "8px 10px" }}
+                            disabled={loading}
                           >
-                            Allow Entry
+                            {loading ? "Checking In..." : "Allow Entry"}
                           </button>
                         )}
+
                         {visitor.checkedIn && (
                           <div style={{ fontWeight: 700 }}>Checked In</div>
                         )}
@@ -259,6 +401,10 @@ export default function VerifyVisitor() {
                       >
                         Entry Denied
                       </div>
+                    )}
+
+                    {visitor.approvalStatus === "Checked In" && (
+                      <div style={{ fontWeight: 700 }}>Checked In</div>
                     )}
                   </div>
                 </div>

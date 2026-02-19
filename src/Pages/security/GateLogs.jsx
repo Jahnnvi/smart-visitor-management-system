@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SecuritySidebar from "../../components/SecuritySidebar";
 
 export default function GateLogs() {
@@ -10,48 +10,53 @@ export default function GateLogs() {
     border: "#E5E4E3",
   };
 
-  const [mockToday, setMockToday] = useState([
-    {
-      id: "1",
-      name: "Alex Morgan",
-      phone: "+1 555 0123",
-      type: "Pre-Registered",
-      purpose: "Campus Meeting - Orientation",
-      checkIn: "08:15 AM",
-      checkOut: "-",
-      status: "In",
-    },
-    {
-      id: "2",
-      name: "Priya Nair",
-      phone: "+1 555 0456",
-      type: "On-the-Spot",
-      purpose: "Parent - Pick up student",
-      checkIn: "09:02 AM",
-      checkOut: "11:10 AM",
-      status: "Out",
-    },
-    {
-      id: "3",
-      name: "Samir Patel",
-      phone: "+1 555 0789",
-      type: "Pre-Registered",
-      purpose: "Vendor Visit",
-      checkIn: "10:22 AM",
-      checkOut: "-",
-      status: "Denied",
-    },
-    {
-      id: "4",
-      name: "Maria Lopez",
-      phone: "+1 555 0990",
-      type: "On-the-Spot",
-      purpose: "Campus Tour",
-      checkIn: "01:05 PM",
-      checkOut: "-",
-      status: "In",
-    },
-  ]);
+  const [mockToday, setMockToday] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  async function fetchTodayLogs() {
+    try {
+      setLoading(true);
+      const res = await fetch("http://localhost:8000/api/visitors/logs/today");
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setMockToday([]);
+        return;
+      }
+
+      const mapped = (data.data || []).map((log) => ({
+        id: log._id,
+        name: log.guestName,
+        phone: log.guestPhone,
+        type: log.visitorType || "Pre-Registered",
+        purpose: log.purpose || "-",
+        checkIn: log.checkInTime
+          ? new Date(log.checkInTime).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "-",
+        checkOut: log.checkOutTime
+          ? new Date(log.checkOutTime).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "-",
+        status: log.status === "checked-in" ? "In" : "Out",
+        visitorId: log.visitorId,
+      }));
+
+      setMockToday(mapped);
+    } catch (err) {
+      setMockToday([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchTodayLogs();
+  }, []);
 
   /* ---------- LAYOUT (MATCH OTHER SECURITY PAGES) ---------- */
 
@@ -96,6 +101,9 @@ export default function GateLogs() {
   const header = {
     padding: "22px 28px",
     borderBottom: `1px solid ${PALETTE.border}`,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
   };
 
   const title = { margin: 0, fontSize: 22, color: PALETTE.accent };
@@ -163,27 +171,31 @@ export default function GateLogs() {
     cursor: "pointer",
   };
 
-  function getCurrentTime() {
-    return new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
+  async function handleCheckout(visitorId) {
+    try {
+      setLoading(true);
 
-  function handleCheckout(id) {
-    const outTime = getCurrentTime();
+      const res = await fetch(
+        `http://localhost:8000/api/visitors/${visitorId}/checkout`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-    setMockToday((prev) =>
-      prev.map((v) =>
-        v.id === id
-          ? {
-              ...v,
-              status: "Out",
-              checkOut: outTime,
-            }
-          : v
-      )
-    );
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        alert(data.message || "Checkout failed");
+        return;
+      }
+
+      await fetchTodayLogs();
+    } catch (err) {
+      alert("Backend not reachable. Is server running?");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -195,8 +207,25 @@ export default function GateLogs() {
         <div style={mainStyle}>
           <div style={card}>
             <div style={header}>
-              <h1 style={title}>Today's Gate Log</h1>
-              <div style={subtitle}>All visitor movements recorded today</div>
+              <div>
+                <h1 style={title}>Today's Gate Log</h1>
+                <div style={subtitle}>
+                  All visitor movements recorded today
+                </div>
+              </div>
+
+              {/* tiny refresh without changing layout */}
+              <button
+                onClick={fetchTodayLogs}
+                style={{
+                  ...checkoutBtn,
+                  padding: "8px 10px",
+                  opacity: loading ? 0.7 : 1,
+                }}
+                disabled={loading}
+              >
+                {loading ? "Loading..." : "Refresh"}
+              </button>
             </div>
 
             <div style={tableWrap}>
@@ -229,7 +258,8 @@ export default function GateLogs() {
                         {v.status === "In" ? (
                           <button
                             style={checkoutBtn}
-                            onClick={() => handleCheckout(v.id)}
+                            onClick={() => handleCheckout(v.visitorId)}
+                            disabled={loading}
                           >
                             CheckOut
                           </button>
@@ -239,6 +269,14 @@ export default function GateLogs() {
                       </td>
                     </tr>
                   ))}
+
+                  {!loading && mockToday.length === 0 && (
+                    <tr>
+                      <td style={td} colSpan={7}>
+                        No gate logs found for today.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
