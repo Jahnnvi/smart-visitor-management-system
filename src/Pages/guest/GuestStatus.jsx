@@ -109,31 +109,29 @@ useEffect(() => {
     setError(null);
 
     try {
-      // ✅ FIRST get phone from localStorage
+      const facultyId = localStorage.getItem("facultyId");
       const guestPhone = localStorage.getItem("guestPhone");
 
-      if (!guestPhone) {
-        setError("Guest phone not found. Please login again.");
+      let url = "";
+
+      if (facultyId) {
+        url = `http://localhost:8000/api/visitors/faculty/${facultyId}`;
+      } else if (guestPhone) {
+        url = `http://localhost:8000/api/visitors/guest/${guestPhone}`;
+      } else {
+        setError("Login required");
         setLoading(false);
         return;
       }
 
-      // ✅ Call backend API (already filtered by phone)
-      const res = await fetch(
-        `http://localhost:8000/api/visitors/guest/${guestPhone}`
-      );
-
-      if (!res.ok) throw new Error("Failed to fetch visitor data");
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch data");
 
       const result = await res.json();
-
-      const visitors = Array.isArray(result.data) ? result.data : [];
-
-      // ✅ Directly set
-      setRequests(visitors);
+      setRequests(result.data || []);
 
     } catch (err) {
-      setError(err.message || "An error occurred");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -141,7 +139,6 @@ useEffect(() => {
 
   fetchRequests();
 }, []);
-
   // Badge color logic (do not break existing UI)
   const getBadgeStyle = (status) => {
     const s = (status || "").toLowerCase();

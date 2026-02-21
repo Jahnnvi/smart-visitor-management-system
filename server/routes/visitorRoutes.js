@@ -12,6 +12,7 @@ const {
   // NEW
   checkInVisitor,
   checkOutVisitor,
+  getRequestsByFaculty,
   //new
   createWalkInVisitor,
 } = require("../controllers/visitorController");
@@ -42,6 +43,9 @@ router.put("/:visitorId/checkout", checkOutVisitor);
 
 // GET - Single visitor
 router.get("/:visitorId", getVisitorByVisitorId);
+
+//GET- by faculty
+router.get("/faculty/:facultyId", getRequestsByFaculty);
 
 // PUT - Update status (Admin etc.)
 router.put("/:visitorId/status", updateVisitorStatus);

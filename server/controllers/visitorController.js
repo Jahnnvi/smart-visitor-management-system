@@ -377,6 +377,29 @@ exports.getAllGateLogs = async (req, res) => {
     });
   }
 }
+
+// get status by faculty id
+exports.getRequestsByFaculty = async (req, res) => {
+  try {
+    const { facultyId } = req.params;
+
+    const visitors = await Visitor.find({
+      createdByRole: "faculty",
+      facultyId: facultyId,
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: visitors,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching faculty requests",
+      error: error.message,
+    });
+  }
+};
 /* =========================================================
    NEW: ON‑THE‑SPOT ENTRY (WALK‑IN)
    ========================================================= */

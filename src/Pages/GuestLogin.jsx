@@ -186,6 +186,7 @@ export default function GuestLogin() {
 
   // ✅ STORE PHONE FOR STATUS PAGE
   localStorage.setItem("guestPhone", mobile);
+  localStorage.setItem("loginRole", "guest");
 
   login();
 
@@ -209,6 +210,9 @@ export default function GuestLogin() {
       setErrors({ password: "Password is required" });
       return;
     }
+ // STORE ROLE + FACULTY ID
+    localStorage.setItem("loginRole", "faculty");
+    localStorage.setItem("facultyId", facultyId);
     login();
     navigate("/guest", { 
       state: { 
