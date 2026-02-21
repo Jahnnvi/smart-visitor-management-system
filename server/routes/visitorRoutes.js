@@ -8,7 +8,7 @@ const {
   updateVisitorStatus,
   getTodayGateLogs,
   getRequestsByPhone,
-
+  getAllGateLogs,
   // NEW
   checkInVisitor,
   checkOutVisitor,
@@ -27,6 +27,9 @@ router.get("/", getAllRequests);
 
 // GET - Today's logs (NOW FROM visitor_logs)
 router.get("/logs/today", getTodayGateLogs);
+
+//GET - All the logs
+router.get("/logs", getAllGateLogs);
 
 // Guest requests by phone
 router.get("/guest/:phone", getRequestsByPhone);

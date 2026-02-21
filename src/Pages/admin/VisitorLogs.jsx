@@ -1,71 +1,28 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState} from "react";
 import AdminSidebar from "../../components/AdminSidebar";
 import VisitorStatsModal from "../../components/VisitorStatsModal";
 
-const MOCK_TODAY = "2025-02-15";
+const VisitorLogs = () => {
+const [logs, setLogs]=useState([]);
+const [loading, setLoading]=useState(true);
 
-const mockLogs = [
-  {
-    id: 1,
-    guestName: "John Doe",
-    phone: "9876543210",
-    visitorType: "Pre-Registered",
-    purpose: "Campus tour and admissions meeting",
-    assignedHost: "Dr. Jane Smith",
-    visitDate: "2025-02-15",
-    checkInTime: "09:15",
-    checkOutTime: "11:30",
-    status: "Out",
-  },
-  {
-    id: 2,
-    guestName: "Jane Smith",
-    phone: "9123456789",
-    visitorType: "On-the-Spot",
-    purpose: "Vendor meeting",
-    assignedHost: "Prof. David Lee",
-    visitDate: "2025-02-15",
-    checkInTime: "10:00",
-    checkOutTime: "-",
-    status: "In",
-  },
-  {
-    id: 3,
-    guestName: "Robert Wilson",
-    phone: "9988776655",
-    visitorType: "Pre-Registered",
-    purpose: "Guest lecture",
-    assignedHost: "Ms. Sarah Johnson",
-    visitDate: "2025-02-14",
-    checkInTime: "14:00",
-    checkOutTime: "16:00",
-    status: "Out",
-  },
-  {
-    id: 4,
-    guestName: "Alice Brown",
-    phone: "9554433221",
-    visitorType: "Pre-Registered",
-    purpose: "Interview",
-    assignedHost: "-",
-    visitDate: "2025-02-14",
-    checkInTime: "-",
-    checkOutTime: "-",
-    status: "Denied",
-  },
-  {
-    id: 5,
-    guestName: "Charlie Davis",
-    phone: "9332211000",
-    visitorType: "On-the-Spot",
-    purpose: "Delivery",
-    assignedHost: "Dr. Michael Brown",
-    visitDate: "2025-02-15",
-    checkInTime: "08:45",
-    checkOutTime: "09:00",
-    status: "Out",
-  },
-];
+useEffect(()=> {
+  const fetchLogs = async() => {
+    try{
+      const res= await fetch("http://localhost:8000/api/visitors/logs");
+      const result= await res.json();
+
+      if(result.success){
+        setLogs(result.data);
+      }
+    }catch(error){
+      console.error("Error loading data");
+    }finally{
+      setLoading(false);
+    }
+  };
+  fetchLogs();
+}, []);
 
 const styles = {
   page: {
@@ -86,16 +43,22 @@ const styles = {
   main: { flex: 1 },
 };
 
-const VisitorLogs = () => {
+
   const [dateFilter, setDateFilter] = useState("All");
   const [showModal, setShowModal] = useState(false);
 
   const filteredLogs = useMemo(() => {
     if (dateFilter === "Today") {
-      return mockLogs.filter((log) => log.visitDate === MOCK_TODAY);
-    }
-    return mockLogs;
-  }, [dateFilter]);
+      const today = new Date().toISOString().split("T")[0];
+
+    return logs.filter(
+      (log) =>
+        log.visitDate &&
+        new Date(log.visitDate).toISOString().split("T")[0] === today
+    );
+  }
+    return logs;
+  }, [dateFilter, logs]);
 
   /* ---- EXISTING STYLES (UNCHANGED) ---- */
 
@@ -239,7 +202,7 @@ const VisitorLogs = () => {
                   <th style={thStyle}>Phone</th>
                   <th style={thStyle}>Visitor Type</th>
                   <th style={thStyle}>Purpose</th>
-                  <th style={thStyle}>Assigned Host</th>
+                 
                   <th style={thStyle}>Visit Date</th>
                   <th style={thStyle}>Check-In</th>
                   <th style={thStyle}>Check-Out</th>
@@ -247,23 +210,31 @@ const VisitorLogs = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredLogs.map((log) => (
-                  <tr key={log.id}>
-                    <td style={tdStyle}>{log.guestName}</td>
-                    <td style={tdStyle}>{log.phone}</td>
-                    <td style={tdStyle}>{log.visitorType}</td>
-                    <td style={tdStyle}>{log.purpose}</td>
-                    <td style={tdStyle}>{log.assignedHost}</td>
-                    <td style={tdStyle}>{log.visitDate}</td>
-                    <td style={tdStyle}>{log.checkInTime}</td>
-                    <td style={tdStyle}>{log.checkOutTime}</td>
-                    <td style={tdStyle}>
-                      <span style={getStatusBadgeStyle(log.status)}>
-                        {log.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {filteredLogs.map((log) => {
+                  console.log("STATUS FROM DB:", log.status);
+  return (
+  <tr key={log._id}>
+    <td style={tdStyle}>{log.guestName}</td>
+    <td style={tdStyle}>{log.guestPhone}</td>
+    <td style={tdStyle}>{log.visitorType}</td>
+    <td style={tdStyle}>{log.purpose}</td>
+   
+    <td style={tdStyle}>
+      {log.visitDate
+        ? new Date(log.visitDate).toDateString()
+        : "-"}
+    </td>
+    <td style={tdStyle}>{log.checkInTime ? new Date(log.checkInTime).toLocaleTimeString() : "-"}</td>
+    <td style={tdStyle}>{log.checkOutTime ? new Date(log.checkOutTime).toLocaleTimeString() : "-"}</td>
+    <td>
+      {log.status === "checked-in" && <span style={getStatusBadgeStyle("In")}>In</span>}
+      {log.status === "checked-out" && <span style={getStatusBadgeStyle("Out")}>Out</span>}
+      {log.status === "rejected" && <span style={getStatusBadgeStyle("Denied")}>Denied</span>}
+      {log.status === "pending" && <span style={getStatusBadgeStyle("Pending")}>Pending</span>}
+    </td>
+  </tr>);
+})}
+
               </tbody>
             </table>
           </div>
@@ -273,7 +244,7 @@ const VisitorLogs = () => {
       <VisitorStatsModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        visitorLogs={mockLogs}
+        visitorLogs={logs}
       />
     </div>
   );

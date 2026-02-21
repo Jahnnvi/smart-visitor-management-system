@@ -358,6 +358,25 @@ exports.getTodayGateLogs = async (req, res) => {
   }
 };
 
+
+//Admin gate Logs
+exports.getAllGateLogs = async (req, res) => {
+  try{
+    const logs= await VisitorLog.find().sort({checkInTime:-1});
+    res.status(200).json({
+      success: true,
+      message: "Gate Logs retrieved sucessfully",
+      data:logs,
+    });
+  }
+  catch(error){
+    res.status(500).json({
+      success:false,
+      message: "Error loading records", 
+      error: error.message,
+    });
+  }
+}
 /* =========================================================
    NEW: ON‑THE‑SPOT ENTRY (WALK‑IN)
    ========================================================= */

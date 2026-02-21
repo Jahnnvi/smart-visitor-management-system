@@ -10,32 +10,51 @@ import {
 import { Bar } from "react-chartjs-2";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
+const formatDate = (date) => {
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = String(d.getFullYear()).slice(-2);
+
+  return `${day}-${month}-${year}`;
+};
 
 const VisitorStatsModal = ({ isOpen, onClose, visitorLogs }) => {
 
-  const chartData = useMemo(() => {
-    const dateCounts = {};
-    (visitorLogs || []).forEach((log) => {
-      if (log.visitDate) {
-        dateCounts[log.visitDate] =
-          (dateCounts[log.visitDate] || 0) + 1;
-      }
-    });
-    const dates = Object.keys(dateCounts).sort();
-    const counts = dates.map((d) => dateCounts[d]);
-    return {
-      labels: dates,
-      datasets: [
-        {
-          label: "Visitors",
-          data: counts,
-          backgroundColor: "#4CD1D6",
-          borderColor: "#E5E4E3",
-          borderWidth: 1,
-        },
-      ],
-    };
-  }, [visitorLogs]);
+ const chartData = useMemo(() => {
+  const dateCounts = {};
+
+  (visitorLogs || []).forEach((log) => {
+    if (log.visitDate) {
+      const formatted = formatDate(log.visitDate); // ✅ USE FORMAT
+
+      dateCounts[formatted] =
+        (dateCounts[formatted] || 0) + 1;
+    }
+  });
+
+  const dates = Object.keys(dateCounts).sort((a, b) => {
+    const [d1, m1, y1] = a.split("-");
+    const [d2, m2, y2] = b.split("-");
+    return new Date(`20${y1}`, m1 - 1, d1) -
+           new Date(`20${y2}`, m2 - 1, d2);
+  });
+
+  const counts = dates.map((d) => dateCounts[d]);
+
+  return {
+    labels: dates,
+    datasets: [
+      {
+        label: "Visitors",
+        data: counts,
+        backgroundColor: "#4CD1D6",
+        borderColor: "#E5E4E3",
+        borderWidth: 1,
+      },
+    ],
+  };
+}, [visitorLogs]);
 
   if (!isOpen) return null;
 
