@@ -3,7 +3,7 @@
 A role-based **Visitor Management System** frontend built using **React** for campus environments.  
 The system digitizes visitor entry, approval, verification, and logging through clearly separated user roles.
 
-> ⚠️ Frontend-only implementation using mock data. Backend integration is planned.
+> ONGOING DEVELOPMENT
 
 ---
 
