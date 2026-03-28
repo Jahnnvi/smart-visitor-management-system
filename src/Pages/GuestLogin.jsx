@@ -210,6 +210,9 @@ export default function GuestLogin() {
       const data = await res.json();
 
       if (data.success) {
+      localStorage.setItem("loginRole", "guest");
+      localStorage.setItem("guestEmail", email);
+      
         login();
 
         navigate("/guest", {
@@ -230,22 +233,9 @@ export default function GuestLogin() {
      FACULTY (UNCHANGED)
      ========================= */
 
-  // ✅ STORE PHONE FOR STATUS PAGE
-  localStorage.setItem("guestPhone", mobile);
-  localStorage.setItem("loginRole", "guest");
-
-  login();
-
-  navigate("/guest", { 
-    state: { 
-      loginRole: "guest",
-      guestMobile: mobile 
-    } 
-  });
-}
-
   // Faculty mode handlers
   function handleFacultyLogin(e) {
+ 
     e.preventDefault();
     setErrors({});
 
@@ -257,6 +247,8 @@ export default function GuestLogin() {
       setErrors({ password: "Password is required" });
       return;
     }
+    localStorage.setItem("loginRole", "faculty");
+    localStorage.setItem("facultyId", facultyId);
     login();
 
     navigate("/guest", {
