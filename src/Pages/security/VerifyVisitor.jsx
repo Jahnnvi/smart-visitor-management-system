@@ -43,7 +43,7 @@ export default function VerifyVisitor() {
       setLoading(true);
 
       const res = await fetch(
-        `http://localhost:8000/api/visitors/guest/${phone}`
+        `http://localhost:9000/api/visitors/guest/${phone}`
       );
       const data = await res.json();
 
@@ -131,7 +131,7 @@ export default function VerifyVisitor() {
       setLoading(true);
 
       const res = await fetch(
-        `http://localhost:8000/api/visitors/${visitor.visitorId}/checkin`,
+        `http://localhost:9000/api/visitors/${visitor.visitorId}/checkin`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

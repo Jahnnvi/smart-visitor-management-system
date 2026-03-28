@@ -16,7 +16,7 @@ export default function GateLogs() {
   async function fetchTodayLogs() {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:8000/api/visitors/logs/today");
+      const res = await fetch("http://localhost:9000/api/visitors/logs/today");
       const data = await res.json();
 
       if (!res.ok || !data.success) {
@@ -176,7 +176,7 @@ export default function GateLogs() {
       setLoading(true);
 
       const res = await fetch(
-        `http://localhost:8000/api/visitors/${visitorId}/checkout`,
+        `http://localhost:9000/api/visitors/${visitorId}/checkout`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

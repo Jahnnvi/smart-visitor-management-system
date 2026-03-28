@@ -9,20 +9,44 @@ const SecurityLogin = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
-    if (!guardId.trim()) {
-      setError("Guard ID is required");
-      return;
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+
+  if (!guardId.trim()) {
+    setError("Guard ID is required");
+    return;
+  }
+
+  if (!password.trim()) {
+    setError("Password is required");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      "http://localhost:9000/api/auth/guard-login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ guardId, password }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      login({ role: "guard", guardId }); // optional: store role
+      navigate("/security/dashboard");
+    } else {
+      setError(data.message || "Invalid credentials");
     }
-    if (!password.trim()) {
-      setError("Password is required");
-      return;
-    }
-    login(); 
-    navigate("/security/dashboard");
-  };
+  } catch (err) {
+    setError("Server error");
+  }
+};
 
   const pageStyle = {
     minHeight: "100vh",

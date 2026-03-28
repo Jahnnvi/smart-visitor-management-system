@@ -168,7 +168,7 @@ export default function GuestLogin() {
 
     try {
       const res = await fetch(
-        "http://localhost:8000/api/visitors/auth/send-otp",
+        "http://localhost:9000/api/auth/send-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -199,7 +199,7 @@ export default function GuestLogin() {
 
     try {
       const res = await fetch(
-        "http://localhost:8000/api/visitors/auth/verify-otp",
+        "http://localhost:9000/api/auth/verify-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -234,30 +234,50 @@ export default function GuestLogin() {
      ========================= */
 
   // Faculty mode handlers
-  function handleFacultyLogin(e) {
- 
-    e.preventDefault();
-    setErrors({});
+async function handleFacultyLogin(e) {
+  e.preventDefault();
+  setErrors({});
 
-    if (!facultyId.trim()) {
-      setErrors({ facultyId: "Faculty ID is required" });
-      return;
-    }
-    if (!password.trim()) {
-      setErrors({ password: "Password is required" });
-      return;
-    }
-    localStorage.setItem("loginRole", "faculty");
-    localStorage.setItem("facultyId", facultyId);
-    login();
-
-    navigate("/guest", {
-      state: {
-        loginRole: "faculty",
-        facultyId,
-      },
-    });
+  if (!facultyId.trim()) {
+    setErrors({ facultyId: "Faculty ID is required" });
+    return;
   }
+  if (!password.trim()) {
+    setErrors({ password: "Password is required" });
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      "http://localhost:9000/api/auth/faculty-login",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ facultyId, password }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      localStorage.setItem("loginRole", "faculty");
+      localStorage.setItem("facultyId", facultyId);
+
+      login();
+
+      navigate("/guest", {
+        state: {
+          loginRole: "faculty",
+          facultyId,
+        },
+      });
+    } else {
+      setErrors({ password: data.message || "Invalid credentials" });
+    }
+  } catch {
+    setErrors({ password: "Server error" });
+  }
+}
 
   function switchTab(tab) {
     setActiveTab(tab);
@@ -412,4 +432,4 @@ export default function GuestLogin() {
         )}
       </div>
     </div>
-  );
+  );}

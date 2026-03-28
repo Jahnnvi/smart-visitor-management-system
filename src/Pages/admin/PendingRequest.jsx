@@ -50,7 +50,7 @@ const styles = {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("http://localhost:8000/api/visitors");
+        const res = await fetch("http://localhost:9000/api/visitors");
         if (!res.ok) throw new Error("Failed to fetch visitors");
         const data = await res.json();
         // Filter only pending requests (status: "pending")
@@ -70,7 +70,7 @@ const styles = {
   // Approve handler
   const handleApprove = async (visitorId) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/visitors/${visitorId}/status`, {
+      const res = await fetch(`http://localhost:9000/api/visitors/${visitorId}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "approved" }),
@@ -85,7 +85,7 @@ const styles = {
   // Reject handler
   const handleDeny = async (visitorId) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/visitors/${visitorId}/status`, {
+      const res = await fetch(`http://localhost:9000/api/visitors/${visitorId}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "rejected" }),

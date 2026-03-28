@@ -115,9 +115,9 @@ useEffect(() => {
       let url = "";
 
       if (facultyId) {
-        url = `http://localhost:8000/api/visitors/faculty/${facultyId}`;
+        url = `http://localhost:9000/api/visitors/faculty/${facultyId}`;
       } else if (guestPhone) {
-        url = `http://localhost:8000/api/visitors/guest/${guestPhone}`;
+        url = `http://localhost:9000/api/visitors/guest/${guestPhone}`;
       } else {
         setError("Login required");
         setLoading(false);

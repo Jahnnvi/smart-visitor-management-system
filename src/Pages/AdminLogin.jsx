@@ -9,20 +9,46 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
-    if (!email.trim()) {
-      setError("Email is required");
-      return;
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+
+  if (!email.trim()) {
+    setError("Email is required");
+    return;
+  }
+
+  if (!password.trim()) {
+    setError("Password is required");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      "http://localhost:9000/api/auth/admin-login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      }
+    );
+
+    const data = await res.json();
+
+    console.log("ADMIN LOGIN RESPONSE:", data); // 🔍 debug
+
+    if (data.success) {
+      login({ role: "admin", email });
+      navigate("/admin");
+    } else {
+      setError(data.message || "Invalid credentials");
     }
-    if (!password.trim()) {
-      setError("Password is required");
-      return;
-    }
-    login({ role: "admin", email });
-    navigate("/admin");
-  };
+  } catch (err) {
+    setError("Server error");
+  }
+};
 
   const pageStyle = {
     minHeight: "100vh",

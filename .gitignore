@@ -26,3 +26,10 @@ node_modules/
 server/node_modules/
 .env
 server/.env
+
+services/auth-service/.env
+services/visitor-services/.env
+
+services/auth-service/node_modules/
+services/visitor-services/node_modules/
+services/api-gateway/node_modules/
