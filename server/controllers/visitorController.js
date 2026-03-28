@@ -1,6 +1,9 @@
 const Visitor = require("../models/Visitor");
 const VisitorLog = require("../models/VisitorLog");
 
+const { sendOTPEmail, sendApprovalEmail } = require("../utils/emailService");
+let otpStore = {}; // temporary storage
+
 // Create a new visitor request
 exports.createVisitorRequest = async (req, res) => {
   console.log("---- CREATE VISITOR START ----");
@@ -137,12 +140,11 @@ exports.updateVisitorStatus = async (req, res) => {
       "checked-in",
       "checked-out",
     ];
+
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid status. Allowed statuses: ${allowedStatuses.join(
-          ", "
-        )}`,
+        message: `Invalid status. Allowed statuses: ${allowedStatuses.join(", ")}`,
       });
     }
 
@@ -157,6 +159,23 @@ exports.updateVisitorStatus = async (req, res) => {
         success: false,
         message: "Visitor not found",
       });
+    }
+
+    // ✅ SEND EMAIL ONLY IF APPROVED
+    if (status === "approved" && updatedVisitor.guestEmail) {
+      try {
+        const { sendApprovalEmail } = require("../utils/emailService");
+
+        await sendApprovalEmail(
+          updatedVisitor.guestEmail,
+          updatedVisitor
+        );
+
+        console.log("📧 Approval email sent to:", updatedVisitor.guestEmail);
+      } catch (emailError) {
+        console.error("❌ Email sending failed:", emailError.message);
+        // Do NOT break API if email fails
+      }
     }
 
     res.status(200).json({
@@ -354,6 +373,59 @@ exports.getTodayGateLogs = async (req, res) => {
       success: false,
       message: "Error retrieving gate logs",
       error: error.message,
+    });
+  }
+};
+
+// SEND OTP
+exports.sendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email required" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    otpStore[email] = otp;
+
+    await sendOTPEmail(email, otp);
+
+    res.status(200).json({
+      success: true,
+      message: "OTP sent",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error sending OTP",
+    });
+  }
+};
+
+// VERIFY OTP
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (otpStore[email] === otp) {
+      delete otpStore[email];
+
+      return res.status(200).json({
+        success: true,
+        message: "OTP verified",
+      });
+    }
+
+    res.status(400).json({
+      success: false,
+      message: "Invalid OTP",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error verifying OTP",
     });
   }
 };

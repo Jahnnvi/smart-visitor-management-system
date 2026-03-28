@@ -14,6 +14,11 @@ const {
   checkOutVisitor,
 } = require("../controllers/visitorController");
 
+const { sendOTP, verifyOTP } = require("../controllers/visitorController");
+
+router.post("/auth/send-otp", sendOTP);
+router.post("/auth/verify-otp", verifyOTP);
+
 // POST - Create visitor
 router.post("/", createVisitorRequest);
 
