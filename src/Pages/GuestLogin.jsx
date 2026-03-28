@@ -7,11 +7,16 @@ export default function GuestLogin() {
   const { login } = useAuth();
   const [activeTab, setActiveTab] = useState("guest");
   const [loginRole, setLoginRole] = useState("guest");
-  const [mobile, setMobile] = useState("");
+
+  // 🔥 CHANGED: mobile → email
+  const [email, setEmail] = useState("");
+
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
+
   const [facultyId, setFacultyId] = useState("");
   const [password, setPassword] = useState("");
+
   const [errors, setErrors] = useState({});
 
   const colors = {
@@ -98,55 +103,43 @@ export default function GuestLogin() {
   };
 
   const inputStyle = {
-    padding: "12px 14px",
-    fontSize: 14,
-    borderRadius: 10,
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 6,
     border: `1px solid ${colors.border}`,
-    backgroundColor: "#FFFFFF",
-    color: colors.darkText,
+    marginBottom: 14,
     outline: "none",
-    fontWeight: 500,
-    transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+    fontSize: 14,
+    background: "#fff",
+    color: colors.darkText,
   };
 
   const buttonStyle = {
-    backgroundColor: colors.accent,
-    color: colors.darkText,
+    background: colors.accent,
     border: "none",
-    padding: "12px 24px",
-    borderRadius: 10,
-    fontSize: 15,
-    fontWeight: 700,
+    color: "#222",
+    padding: "10px 14px",
+    borderRadius: 8,
     cursor: "pointer",
-    marginTop: 4,
-    transition: "all 0.2s ease",
+    fontWeight: 700,
+    fontSize: 14,
   };
 
   const buttonSecondaryStyle = {
-    backgroundColor: "transparent",
+    background: "transparent",
     color: colors.cardText,
     border: `1.5px solid ${colors.border}`,
-    padding: "12px 24px",
-    borderRadius: 10,
-    fontSize: 15,
-    fontWeight: 700,
+    padding: "10px 14px",
+    borderRadius: 8,
     cursor: "pointer",
-    marginTop: 4,
-    transition: "all 0.2s ease",
+    fontWeight: 700,
+    fontSize: 14,
   };
 
   const errorStyle = {
     color: colors.errorColor,
     fontSize: 13,
     marginTop: 4,
-    fontWeight: 500,
-  };
-
-  const helperTextStyle = {
-    color: "rgba(250, 252, 252, 0.65)",
-    fontSize: 12,
-    marginTop: 8,
-    fontStyle: "italic",
   };
 
   const buttonGroupStyle = {
@@ -155,34 +148,87 @@ export default function GuestLogin() {
     marginTop: 8,
   };
 
-  // Guest mode handlers
-  function handleSendOtp(e) {
+  /* =========================
+     GUEST (EMAIL OTP LOGIC)
+     ========================= */
+
+  async function handleSendOtp(e) {
     e.preventDefault();
     setErrors({});
-    if (!mobile.trim()) {
-      setErrors({ mobile: "Mobile number is required" });
+
+    if (!email.trim()) {
+      setErrors({ email: "Email is required" });
       return;
     }
-    if (!/^\d{6,15}$/.test(mobile.trim())) {
-      setErrors({ mobile: "Enter a valid mobile number" });
+
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setErrors({ email: "Enter a valid email" });
       return;
     }
-    setOtpSent(true);
+
+    try {
+      const res = await fetch(
+        "http://localhost:8000/api/visitors/auth/send-otp",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setOtpSent(true);
+      } else {
+        setErrors({ email: data.message });
+      }
+    } catch {
+      setErrors({ email: "Server error" });
+    }
   }
 
- function handleVerifyOtp(e) {
-  e.preventDefault();
-  setErrors({});
+  async function handleVerifyOtp(e) {
+    e.preventDefault();
+    setErrors({});
 
-  if (!otp.trim()) {
-    setErrors({ otp: "OTP is required" });
-    return;
+    if (!otp.trim()) {
+      setErrors({ otp: "OTP is required" });
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        "http://localhost:8000/api/visitors/auth/verify-otp",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, otp }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        login();
+
+        navigate("/guest", {
+          state: {
+            loginRole: "guest",
+            guestEmail: email,
+          },
+        });
+      } else {
+        setErrors({ otp: "Invalid OTP" });
+      }
+    } catch {
+      setErrors({ otp: "Server error" });
+    }
   }
 
-  if (!/^\d{6}$/.test(otp.trim())) {
-    setErrors({ otp: "OTP must be 6 digits" });
-    return;
-  }
+  /* =========================
+     FACULTY (UNCHANGED)
+     ========================= */
 
   // ✅ STORE PHONE FOR STATUS PAGE
   localStorage.setItem("guestPhone", mobile);
@@ -202,6 +248,7 @@ export default function GuestLogin() {
   function handleFacultyLogin(e) {
     e.preventDefault();
     setErrors({});
+
     if (!facultyId.trim()) {
       setErrors({ facultyId: "Faculty ID is required" });
       return;
@@ -210,15 +257,13 @@ export default function GuestLogin() {
       setErrors({ password: "Password is required" });
       return;
     }
- // STORE ROLE + FACULTY ID
-    localStorage.setItem("loginRole", "faculty");
-    localStorage.setItem("facultyId", facultyId);
     login();
-    navigate("/guest", { 
-      state: { 
+
+    navigate("/guest", {
+      state: {
         loginRole: "faculty",
-        facultyId: facultyId 
-      } 
+        facultyId,
+      },
     });
   }
 
@@ -228,7 +273,7 @@ export default function GuestLogin() {
     setErrors({});
     setOtpSent(false);
     setOtp("");
-    setMobile("");
+    setEmail("");
     setFacultyId("");
     setPassword("");
   }
@@ -236,7 +281,6 @@ export default function GuestLogin() {
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
-        {/* Tabs */}
         <div style={tabsContainerStyle}>
           <button
             style={tabStyle(activeTab === "guest")}
@@ -252,44 +296,37 @@ export default function GuestLogin() {
           </button>
         </div>
 
-        {/* Guest Mode */}
+        {/* ================= GUEST ================= */}
         {activeTab === "guest" && (
           <div style={contentStyle}>
             <h1 style={titleStyle}>Guest Login</h1>
             <p style={subtitleStyle}>Verify your identity to continue</p>
 
-            <form style={formStyle} onSubmit={(e) => e.preventDefault()}>
-              {/* Mobile Number Field */}
+            <form style={formStyle}>
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>Mobile Number</label>
+                <label style={labelStyle}>Email</label>
                 <input
                   style={inputStyle}
-                  type="tel"
-                  value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
-                  placeholder="Enter your mobile number"
-                  inputMode="numeric"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
                 />
-                {errors.mobile && <div style={errorStyle}>{errors.mobile}</div>}
+                {errors.email && <div style={errorStyle}>{errors.email}</div>}
               </div>
 
-              {/* OTP Field - shown after Send OTP clicked */}
               {otpSent && (
                 <div style={fieldGroupStyle}>
                   <label style={labelStyle}>OTP</label>
                   <input
                     style={inputStyle}
-                    type="text"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     placeholder="Enter 6-digit OTP"
-                    inputMode="numeric"
                   />
                   {errors.otp && <div style={errorStyle}>{errors.otp}</div>}
                 </div>
               )}
 
-              {/* Buttons */}
               {!otpSent ? (
                 <div style={buttonGroupStyle}>
                   <button style={buttonStyle} onClick={handleSendOtp}>
@@ -299,7 +336,7 @@ export default function GuestLogin() {
                     style={buttonSecondaryStyle}
                     onClick={(e) => {
                       e.preventDefault();
-                      setMobile("");
+                      setEmail("");
                       setErrors({});
                     }}
                   >
@@ -324,27 +361,21 @@ export default function GuestLogin() {
                   </button>
                 </div>
               )}
-
-              <div style={helperTextStyle}>
-                (Mock OTP: Enter any 6-digit number)
-              </div>
             </form>
           </div>
         )}
 
-        {/* Faculty Mode */}
+        {/* ================= FACULTY ================= */}
         {activeTab === "faculty" && (
           <div style={contentStyle}>
             <h1 style={titleStyle}>Faculty Login</h1>
             <p style={subtitleStyle}>Login to invite a guest</p>
 
             <form style={formStyle} onSubmit={handleFacultyLogin}>
-              {/* Faculty ID Field */}
               <div style={fieldGroupStyle}>
                 <label style={labelStyle}>Faculty ID</label>
                 <input
                   style={inputStyle}
-                  type="text"
                   value={facultyId}
                   onChange={(e) => setFacultyId(e.target.value)}
                   placeholder="e.g. 25MSP0987"
@@ -354,7 +385,6 @@ export default function GuestLogin() {
                 )}
               </div>
 
-              {/* Password Field */}
               <div style={fieldGroupStyle}>
                 <label style={labelStyle}>Password</label>
                 <input
@@ -369,7 +399,6 @@ export default function GuestLogin() {
                 )}
               </div>
 
-              {/* Buttons */}
               <div style={buttonGroupStyle}>
                 <button style={buttonStyle} type="submit">
                   Login & Continue
@@ -386,14 +415,9 @@ export default function GuestLogin() {
                   Clear
                 </button>
               </div>
-
-              <div style={helperTextStyle}>
-                (Mock login: Any non-empty values accepted)
-              </div>
             </form>
           </div>
         )}
       </div>
     </div>
   );
-}

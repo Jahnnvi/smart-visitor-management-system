@@ -1,8 +1,9 @@
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const visitorRoutes = require("./routes/visitorRoutes");
-require("dotenv").config();
 
 const app = express();
 
@@ -18,7 +19,7 @@ app.get("/", (req, res) => {
 // Visitor Routes
 app.use("/api/visitors", visitorRoutes);
 
-console.log("MONGO_URI =", process.env.MONGO_URI);
+// console.log("MONGO_URI =", process.env.MONGO_URI);
 
 // Connect MongoDB (UPDATED BLOCK)
 mongoose
