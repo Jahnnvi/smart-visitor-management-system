@@ -13,6 +13,9 @@ const { sendApprovalEmail } = require("../utils/emailService");
         console.log("❌ No body received");
         return res.status(400).json({ message: "No data received" });
         }
+        if (req.body.guestEmail) {
+  req.body.guestEmail = req.body.guestEmail.trim().toLowerCase();
+}
 
         console.log("📦 Request Body:", JSON.stringify(req.body, null, 2));
 
@@ -63,42 +66,41 @@ const { sendApprovalEmail } = require("../utils/emailService");
     }
     };
 
-    // GET requests by guest phone
-    // GET requests by guest phone (ONLY TODAY)
-    exports.getRequestsByPhone = async (req, res) => {
-    try {
-        const { phone } = req.params;
 
-        // Start of today
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        // Start of tomorrow
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        const visitors = await Visitor.find({
-        guestPhone: phone,
-        visitDate: {
-            $gte: today,
-            $lt: tomorrow,
-        },
-        }).sort({ createdAt: -1 });
-
-        res.status(200).json({
-        success: true,
-        data: visitors,
-        });
-    } catch (error) {
-        console.error("Error fetching guest requests by phone:", error);
-        res.status(500).json({
-        success: false,
-        message: "Error fetching guest requests",
-        });
-    }
-    };
-
-
+        // GET requests by guest email (TODAY + FUTURE)
+       exports.getRequestsByEmail = async (req, res) => {
+  try {
+    const email = req.user.email.toLowerCase();// 🔥 FIX
+    // // 🔐 SECURITY CHECK (VERY IMPORTANT)
+    // if (req.user.role !== "admin" && req.user.email !== email) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Not allowed",
+    //   });
+    // }
+    // Start of today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+console.log("Searching email:", email);
+    const visitors = await Visitor.find({
+      guestEmail: email,
+      visitDate: {
+        $gte: today,
+      },
+    }).sort({ visitDate: 1 });
+console.log("Found visitors:", visitors.length);
+    res.status(200).json({
+      success: true,
+      data: visitors,
+    });
+  } catch (error) {
+    console.error("Error fetching guest requests by email:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching guest requests",
+    });
+  }
+};
 
     // Get visitor by visitorId
     exports.getVisitorByVisitorId = async (req, res) => {
@@ -284,62 +286,62 @@ const { sendApprovalEmail } = require("../utils/emailService");
     NEW: CHECK-OUT VISITOR (SECURITY)
     ========================================================= */
     exports.checkOutVisitor = async (req, res) => {
-    try {
-        const { visitorId } = req.params;
+  try {
+    const { visitorId } = req.params;
 
-        const visitor = await Visitor.findOne({ visitorId });
+    const visitor = await Visitor.findOne({ visitorId });
 
-        if (!visitor) {
-        return res.status(404).json({
-            success: false,
-            message: "Visitor request not found",
-        });
-        }
-
-        if (visitor.status !== "checked-in") {
-        return res.status(400).json({
-            success: false,
-            message: `Visitor is not checked in. Current status: ${visitor.status}`,
-        });
-        }
-
-        // Find latest active log for this visitor (not checked-out yet)
-        const log = await VisitorLog.findOne({
-        visitorId,
-        status: "checked-in",
-        checkOutTime: null,
-        }).sort({ checkInTime: -1 });
-
-        if (!log) {
-        return res.status(404).json({
-            success: false,
-            message: "No active check-in log found for visitor",
-        });
-        }
-
-        log.checkOutTime = new Date();
-        log.status = "checked-out";
-        await log.save();
-
-        visitor.status = "checked-out";
-        await visitor.save();
-
-        res.status(200).json({
-        success: true,
-        message: "Visitor checked out successfully",
-        data: {
-            visitor,
-            log,
-        },
-        });
-    } catch (error) {
-        res.status(500).json({
+    if (!visitor) {
+      return res.status(404).json({
         success: false,
-        message: "Error checking out visitor",
-        error: error.message,
-        });
+        message: "Visitor request not found",
+      });
     }
-    };
+
+    if (visitor.status !== "checked-in") {
+      return res.status(400).json({
+        success: false,
+        message: `Visitor is not checked in. Current status: ${visitor.status}`,
+      });
+    }
+
+    // Find active log
+    const log = await VisitorLog.findOne({
+      visitorId,
+      status: "checked-in",
+      checkOutTime: null,
+    }).sort({ checkInTime: -1 });
+
+    if (!log) {
+      return res.status(404).json({
+        success: false,
+        message: "No active check-in log found for visitor",
+      });
+    }
+
+    log.checkOutTime = new Date();
+    log.status = "checked-out";
+    await log.save();
+
+    visitor.status = "checked-out";
+    await visitor.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Visitor checked out successfully",
+      data: {
+        visitor,
+        log,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error checking out visitor",
+      error: error.message,
+    });
+  }
+};
 
     /* =========================================================
     UPDATED: TODAY'S GATE LOGS (FROM VisitorLog)
@@ -394,27 +396,60 @@ const { sendApprovalEmail } = require("../utils/emailService");
     }
 
     // get status by faculty id
-    exports.getRequestsByFaculty = async (req, res) => {
-    try {
-        const { facultyId } = req.params;
+   exports.getRequestsByFaculty = async (req, res) => {
+  try {
+     let facultyId;
 
-        const visitors = await Visitor.find({
-        createdByRole: "faculty",
-        facultyId: facultyId,
-        }).sort({ createdAt: -1 });
-
-        res.status(200).json({
-        success: true,
-        data: visitors,
-        });
-    } catch (error) {
-        res.status(500).json({
+    // 🔐 AUTH CHECK
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        message: "Error fetching faculty requests",
-        error: error.message,
-        });
+        message: "Unauthorized",
+      });
     }
-    };
+    
+
+    // ✅ Admin can view any faculty
+    if (req.user.role === "admin") {
+      facultyId = req.params.facultyId;
+    } else {
+      // ✅ Faculty can ONLY see their own data
+      facultyId = req.user.facultyId;
+    }
+
+    // 🔐 ROLE CHECK
+    if (req.user.role !== "admin" && req.user.facultyId !== facultyId) {
+      return res.status(403).json({
+        success: false,
+        message: "Not allowed",
+      });
+    }
+
+    // Start of today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const visitors = await Visitor.find({
+      createdByRole: "faculty",
+      facultyId: facultyId,
+      visitDate: {
+        $gte: today,
+      },
+    }).sort({ visitDate: 1 });
+
+    res.status(200).json({
+      success: true,
+      data: visitors,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching faculty requests",
+      error: error.message,
+    });
+  }
+};
 
    
     /* =========================================================

@@ -110,20 +110,24 @@ useEffect(() => {
 
     try {
       const facultyId = localStorage.getItem("facultyId");
-      const guestPhone = localStorage.getItem("guestPhone");
-
+      const guestEmail = localStorage.getItem("guestEmail");
+const role = localStorage.getItem("loginRole");
       let url = "";
 
-      if (facultyId) {
+      if (role === "faculty") {
         url = `http://localhost:9000/api/visitors/faculty/${facultyId}`;
-      } else if (guestPhone) {
-        url = `http://localhost:9000/api/visitors/guest/${guestPhone}`;
+      } else if (role === "guest" ) {
+        url = `http://localhost:9000/api/visitors/guest/${guestEmail}`;
       } else {
         setError("Login required");
         setLoading(false);
         return;
       }
-
+      // ✅ now safe to log
+      console.log("Role:", role);
+      console.log("FacultyId:", facultyId);
+      console.log("GuestEmail:", guestEmail);
+      console.log("URL:", url);
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch data");
 

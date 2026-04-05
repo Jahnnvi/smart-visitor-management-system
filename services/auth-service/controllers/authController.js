@@ -1,22 +1,28 @@
     const { sendOTPEmail } = require("../utils/emailService");
-
+const jwt = require("jsonwebtoken");
+  const bcrypt = require("bcryptjs");
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
     let otpStore = {}; 
 
     exports.sendOTP = async (req, res) => {
     try {
         const { email } = req.body;
 
-        if (!email) {
+        if (!email || !email.trim()) {
         return res.status(400).json({ success: false, message: "Email required" });
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        otpStore[email] = otp;
+        const normalizedEmail = email.trim().toLowerCase();
+        otpStore[normalizedEmail] = {
+  otp,
+  expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
+};
 
         console.log("OTP for", email, ":", otp);
 
-        await sendOTPEmail(email, otp); //sends email to the user
+        await sendOTPEmail(normalizedEmail, otp); //sends email to the user
 
         res.status(200).json({
         success: true,
@@ -34,21 +40,60 @@
     };
     exports.verifyOTP = async (req, res) => {
     try {
-        const { email, otp } = req.body;
+         const { email, otp } = req.body;
+        if (!email || !email.trim()) {
+  return res.status(400).json({
+    success: false,
+    message: "Email required",
+  });
+}
+       
+const normalizedEmail = email.trim().toLowerCase();
 
-        if (otpStore[email] === otp) {
-        delete otpStore[email];
+        const record = otpStore[normalizedEmail];
 
-        return res.status(200).json({
-            success: true,
-            message: "OTP verified",
-        });
-        }
+if (!record) {
+  return res.status(400).json({
+    success: false,
+    message: "OTP not found",
+  });
+}
 
-        res.status(400).json({
-        success: false,
-        message: "Invalid OTP",
-        });
+// ⏳ check expiry
+if (Date.now() > record.expiresAt) {
+  delete otpStore[normalizedEmail];
+
+  return res.status(400).json({
+    success: false,
+    message: "OTP expired",
+  });
+}
+
+// ✅ check OTP
+if (record.otp === otp) {
+  delete otpStore[normalizedEmail];
+
+  const token = jwt.sign(
+    {
+      role: "guest",
+      email: normalizedEmail,
+    },
+    JWT_SECRET,
+    { expiresIn: "1d" }
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: "OTP verified",
+    token,
+  });
+}
+
+// ❌ wrong OTP
+return res.status(400).json({
+  success: false,
+  message: "Invalid OTP",
+});
     } catch (error) {
         res.status(500).json({
         success: false,
@@ -71,18 +116,42 @@
         });
         }
 
-        if (faculty.password !== password) {
-        return res.status(401).json({
-            success: false,
-            message: "Invalid password",
-        });
-        }
+      
 
-        res.json({
-        success: true,
-        message: "Login successful",
-        facultyId,
-        });
+let isMatch = false;
+
+if (faculty.password && faculty.password.startsWith("$2")) {
+  isMatch = await bcrypt.compare(password, faculty.password);
+} else {
+  isMatch = password === faculty.password; // fallback
+}
+
+if (!isMatch) {
+  return res.status(401).json({
+    success: false,
+    message: "Invalid password",
+  });
+}
+
+        const token = jwt.sign(
+  {
+    role: "faculty",
+    facultyId: faculty.facultyId,
+    email: faculty.email ? faculty.email.trim().toLowerCase() : "",
+  },
+  JWT_SECRET,
+  { expiresIn: "1d" }
+);
+
+res.json({
+  success: true,
+  message: "Login successful",
+  token, // 🔥 IMPORTANT
+  faculty: {
+    name: faculty.name,
+    email: faculty.email,
+  },
+});
     } catch (error) {
         res.status(500).json({
         success: false,
@@ -95,13 +164,34 @@
         exports.adminLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
+        if (!email || !email.trim()) {
+  return res.status(400).json({
+    success: false,
+    message: "Email required",
+  });
+}
 
-        // 🔥 TEMP (hardcoded admin)
-        if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-        return res.json({
-            success: true,
-            message: "Admin login successful",
-        });
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+if (
+  normalizedEmail === process.env.ADMIN_USERNAME &&
+  password.trim() === process.env.ADMIN_PASSWORD
+) {
+  const token = jwt.sign(
+    {
+      role: "admin",
+      email: normalizedEmail, // ✅ FIX
+    },
+    JWT_SECRET,
+    { expiresIn: "1d" }
+  );
+
+return res.json({
+  success: true,
+  message: "Admin login successful",
+  token,
+});
         }
 
         return res.status(401).json({
@@ -132,18 +222,41 @@
         });
         }
 
-        if (guard.password !== password) {
-        return res.status(401).json({
-            success: false,
-            message: "Invalid password",
-        });
-        }
+        
 
-        res.json({
-        success: true,
-        message: "Login successful",
-        data: guard,
-        });
+let isMatch = false;
+
+if (guard.password && guard.password.startsWith("$2")) {
+  isMatch = await bcrypt.compare(password, guard.password);
+} else {
+  isMatch = password === guard.password; // fallback
+}
+
+if (!isMatch) {
+  return res.status(401).json({
+    success: false,
+    message: "Invalid password",
+  });
+}
+
+        const token = jwt.sign(
+  {
+    role: "security",
+    guardId: guard.guardId,
+  },
+  JWT_SECRET,
+  { expiresIn: "1d" }
+);
+
+res.json({
+  success: true,
+  message: "Login successful",
+  token,
+  data: {
+  guardId: guard.guardId,
+  name: guard.name,
+},
+});
     } catch (error) {
         res.status(500).json({
         success: false,

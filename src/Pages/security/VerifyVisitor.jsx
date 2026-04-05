@@ -10,8 +10,8 @@ export default function VerifyVisitor() {
     border: "#E5E4E3",
   };
 
-  // This input is now used as PHONE NUMBER (digits only)
-  const [visitorId, setVisitorId] = useState("");
+  // This input is now used as EMAIL ADDRESS
+  const [visitorEmail, setVisitorEmail] = useState("");
   const [requestId, setRequestId] = useState(""); // kept for UI only
 
   const [requests, setRequests] = useState([]); // list of requests for today
@@ -21,10 +21,6 @@ export default function VerifyVisitor() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function normalizePhoneDigits(value) {
-    return value.replace(/\D/g, "");
-  }
-
   async function handleVerify(e) {
     e.preventDefault();
     setError("");
@@ -32,19 +28,20 @@ export default function VerifyVisitor() {
     setRequests([]);
     setSelectedVisitorId("");
 
-    const phone = normalizePhoneDigits(visitorId);
+    
+const email = visitorEmail.trim().toLowerCase();
 
-    if (!phone) {
-      setError("Enter guest phone number to verify.");
-      return;
-    }
+if (!email) {
+  setError("Enter guest email to verify.");
+  return;
+}
 
     try {
       setLoading(true);
 
-      const res = await fetch(
-        `http://localhost:9000/api/visitors/guest/${phone}`
-      );
+          const res = await fetch(
+      `http://localhost:9000/api/visitors/guest/${email}`
+    );
       const data = await res.json();
 
       if (!res.ok || !data.success) {
@@ -55,7 +52,7 @@ export default function VerifyVisitor() {
       const list = data.data || [];
 
       if (list.length === 0) {
-        setError("No visitor requests found for today for this phone number.");
+        setError("No visitor requests found for today for this email.");
         return;
       }
 
@@ -285,13 +282,13 @@ export default function VerifyVisitor() {
               </div>
 
               <form onSubmit={handleVerify}>
-                <label style={labelStyle}>Visitor Mobile Number</label>
-                <input
-                  style={inputStyle}
-                  value={visitorId}
-                  onChange={(e) => setVisitorId(e.target.value)}
-                  placeholder="Enter guest phone number (digits only)"
-                />
+               <label>Guest Email</label>
+<input
+  style={inputStyle}
+  value={visitorEmail}
+  onChange={(e) => setVisitorEmail(e.target.value)}
+  placeholder="Enter guest email"
+/>
 
                 <label style={labelStyle}>Request ID (optional)</label>
                 <input
@@ -416,7 +413,7 @@ export default function VerifyVisitor() {
                 Gate Tools
               </div>
               <div style={{ color: "#ccc", fontSize: 13, lineHeight: 1.5 }}>
-                - Verify using guest phone number (digits only).
+                - Verify using guest email.
                 <br />- Only today's requests are shown.
                 <br />- Select the correct visitorId and allow entry.
               </div>

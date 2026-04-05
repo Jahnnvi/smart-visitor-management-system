@@ -39,12 +39,15 @@ const AdminLogin = () => {
 
     console.log("ADMIN LOGIN RESPONSE:", data); // 🔍 debug
 
-    if (data.success) {
-      login({ role: "admin", email });
-      navigate("/admin");
-    } else {
-      setError(data.message || "Invalid credentials");
-    }
+   if (data.success && data.token) {
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("loginRole", "admin");
+
+  login();
+  navigate("/admin");
+} else {
+  setError(data.message || "Login failed (no token)");
+}
   } catch (err) {
     setError("Server error");
   }

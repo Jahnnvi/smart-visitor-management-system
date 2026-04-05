@@ -527,27 +527,4 @@ exports.createWalkInVisitor = async (req, res) => {
 };
 
 // VERIFY OTP
-exports.verifyOTP = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
 
-    if (otpStore[email] === otp) {
-      delete otpStore[email];
-
-      return res.status(200).json({
-        success: true,
-        message: "OTP verified",
-      });
-    }
-
-    res.status(400).json({
-      success: false,
-      message: "Invalid OTP",
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error verifying OTP",
-    });
-  }
-};

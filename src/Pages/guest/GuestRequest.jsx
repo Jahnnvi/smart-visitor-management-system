@@ -137,11 +137,11 @@ const styles = {
 
 export default function GuestRequest() {
   const location = useLocation();
-  const loginType = location.state?.loginRole || "guest";
+  const loginType = localStorage.getItem("loginRole") || "guest";
 
   const initialGuestForm = {
     guestName: "",
-    guestEmail: "",
+    guestEmail:loginType === "guest"? localStorage.getItem("guestEmail") || "": "",// ✅ auto-fill
     guestPhone: location.state?.guestMobile || "",
     purpose: "",
     visitDate: "",
@@ -168,10 +168,6 @@ export default function GuestRequest() {
     setShowNotice(false);
     setMessage({ type: "", text: "" });
 
-    if (!guestForm.guestEmail) {
-      setShowNotice(true);
-      return;
-    }
 
     if (
       loginType === "faculty" &&
@@ -184,20 +180,19 @@ export default function GuestRequest() {
     try {
       setLoading(true);
 
-      const apiData = {
-        createdByRole: loginType,
-        facultyName: loginType === "faculty" ? facultyName : undefined,
-        facultyEmail: loginType === "faculty" ? facultyEmail : undefined,
-        facultyId: loginType === "faculty" ? facultyId : undefined,
-        department:
-          loginType === "faculty" ? facultyDepartment : undefined,
-        guestName: guestForm.guestName,
-        guestEmail: guestForm.guestEmail,
-        guestPhone: guestForm.guestPhone,
-        organization: "",
-        purpose: guestForm.purpose,
-        visitDate: guestForm.visitDate,
-      };
+    const apiData = {
+  createdByRole: loginType,
+  facultyName: loginType === "faculty" ? facultyName : undefined,
+  facultyEmail: loginType === "faculty" ? facultyEmail : undefined,
+  facultyId: loginType === "faculty" ? facultyId : undefined,
+  department: loginType === "faculty" ? facultyDepartment : undefined,
+  guestName: guestForm.guestName,
+  guestEmail: guestForm.guestEmail,
+  guestPhone: guestForm.guestPhone,
+  organization: "",
+  purpose: guestForm.purpose,
+  visitDate: guestForm.visitDate,
+};
 
       const response = await fetch(
         "http://localhost:9000/api/visitors",
@@ -313,14 +308,17 @@ export default function GuestRequest() {
 
                   <label style={styles.label}>
                     Guest Email
-                    <input
-                      name="guestEmail"
-                      type="email"
-                      required
-                      style={styles.input}
-                      value={guestForm.guestEmail}
-                      onChange={handleGuestChange}
-                    />
+                  <input
+                    name="guestEmail"
+                    type="email"
+                    style={{
+                      ...styles.input,
+                      background: loginType === "guest" ? "#eee" : "#fff",
+                    }}
+                    value={guestForm.guestEmail}
+                    onChange={handleGuestChange}
+                    readOnly={loginType === "guest"} // 🔥 KEY FIX
+                  />
                   </label>
                 </div>
 

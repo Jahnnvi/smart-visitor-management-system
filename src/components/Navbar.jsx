@@ -44,9 +44,16 @@ export default function Navbar() {
   };
 
   const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+  logout();
+
+  localStorage.removeItem("facultyId");
+localStorage.removeItem("facultyName");
+localStorage.removeItem("facultyEmail");
+localStorage.removeItem("guestEmail");
+localStorage.removeItem("loginRole");
+
+  navigate("/login");
+};
 
   return (
     <nav style={navbarStyle}>

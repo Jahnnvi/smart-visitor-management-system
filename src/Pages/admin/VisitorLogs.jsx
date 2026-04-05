@@ -9,7 +9,7 @@ const [loading, setLoading]=useState(true);
 useEffect(()=> {
   const fetchLogs = async() => {
     try{
-      const res= await fetch("http://localhost:8000/api/visitors/logs");
+      const res= await fetch("http://localhost:9000/api/visitors/logs");
       const result= await res.json();
 
       if(result.success){

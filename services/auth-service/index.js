@@ -18,6 +18,20 @@ app.get("/", (req, res) => {
     res.send("Auth Service Running");
 });
 
+const rateLimit = require("express-rate-limit");
+
+// general limiter (all APIs)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 100, // max 100 requests
+  message: {
+    success: false,
+    message: "Too many requests. Try again later.",
+  },
+});
+
+app.use(limiter);
+
 app.listen(8001, () => {
     console.log("Auth Service running on port 8001");
 });
