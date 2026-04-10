@@ -20,33 +20,33 @@ const {
 router.post("/", authMiddleware, createVisitorRequest);
 
 // POST - Walk-in visitor
-router.post("/walkin", authMiddleware, createWalkInVisitor);
+router.post("/walkin",allowRoles("security"), createWalkInVisitor);
 
 // GET - All visitors
-router.get("/", authMiddleware, getAllRequests);
+router.get("/", authMiddleware, allowRoles("admin"), getAllRequests);
 
 // GET - Today's logs
-router.get("/logs/today",authMiddleware, getTodayGateLogs);
+router.get("/logs/today", authMiddleware, allowRoles("admin", "security"), getTodayGateLogs);
 
 // GET - All logs
-router.get("/logs",authMiddleware, getAllGateLogs);
+router.get("/logs",authMiddleware,allowRoles("admin"), getAllGateLogs);
 
 // Guest requests by email
-router.get("/guest/:email", authMiddleware, allowRoles("guest"), getRequestsByEmail);
+router.get("/guest/me", authMiddleware, allowRoles("guest"), getRequestsByEmail);
 
 // Faculty requests
 router.get("/faculty/:facultyId", authMiddleware,allowRoles("faculty"), getRequestsByFaculty);
 
 // Check-in
-router.post("/:visitorId/checkin", authMiddleware, checkInVisitor);
+router.post("/:visitorId/checkin",  authMiddleware,allowRoles("security"),checkInVisitor);
 
 // Check-out
-router.put("/:visitorId/checkout", authMiddleware, checkOutVisitor);
+router.put("/:visitorId/checkout", authMiddleware,allowRoles("security"), checkOutVisitor);
 
 // Update status
-router.put("/:visitorId/status", authMiddleware, updateVisitorStatus);
+router.put("/:visitorId/status",authMiddleware,allowRoles("admin"), updateVisitorStatus);
 
 // GET - Single visitor
-router.get("/:visitorId", authMiddleware, getVisitorByVisitorId);
+router.get("/:visitorId", getVisitorByVisitorId);
 
 module.exports = router;

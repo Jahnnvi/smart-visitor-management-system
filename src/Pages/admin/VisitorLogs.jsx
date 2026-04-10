@@ -6,23 +6,31 @@ const VisitorLogs = () => {
 const [logs, setLogs]=useState([]);
 const [loading, setLoading]=useState(true);
 
-useEffect(()=> {
-  const fetchLogs = async() => {
-    try{
-      const res= await fetch("http://localhost:9000/api/visitors/logs");
-      const result= await res.json();
+const fetchLogs = async () => {
+  try {
+    const token = localStorage.getItem("token"); // ✅ GET TOKEN
 
-      if(result.success){
-        setLogs(result.data);
-      }
-    }catch(error){
-      console.error("Error loading data");
-    }finally{
-      setLoading(false);
+    const res = await fetch("http://localhost:9000/api/visitors/logs", {
+      headers: {
+        Authorization: `Bearer ${token}`, // ✅ ADD THIS
+      },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch logs");
+
+    const result = await res.json();
+
+    if (result.success) {
+      setLogs(result.data);
     }
-  };
-  fetchLogs();
-}, []);
+  } catch (error) {
+    console.error("Error loading data:", error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+fetchLogs();
 
 const styles = {
   page: {

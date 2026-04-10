@@ -180,25 +180,26 @@ export default function GuestRequest() {
     try {
       setLoading(true);
 
-    const apiData = {
-  createdByRole: loginType,
-  facultyName: loginType === "faculty" ? facultyName : undefined,
-  facultyEmail: loginType === "faculty" ? facultyEmail : undefined,
-  facultyId: loginType === "faculty" ? facultyId : undefined,
-  department: loginType === "faculty" ? facultyDepartment : undefined,
-  guestName: guestForm.guestName,
-  guestEmail: guestForm.guestEmail,
-  guestPhone: guestForm.guestPhone,
-  organization: "",
-  purpose: guestForm.purpose,
-  visitDate: guestForm.visitDate,
-};
-
+      const apiData = {
+        createdByRole: loginType,
+      //   facultyName: loginType === "faculty" ? localStorage.getItem("facultyName") : undefined,
+      // facultyEmail: loginType === "faculty" ? localStorage.getItem("facultyEmail") : undefined,
+      // facultyId: loginType === "faculty" ? localStorage.getItem("facultyId") : undefined,
+      //   department:
+      //     loginType === "faculty" ? facultyDepartment : undefined,
+        guestName: guestForm.guestName,
+        // guestEmail:loginType === "guest"? localStorage.getItem("guestEmail"): guestForm.guestEmail,
+        guestPhone: guestForm.guestPhone,
+        // organization: "",
+        purpose: guestForm.purpose,
+        visitDate: guestForm.visitDate,
+      };
+const token = localStorage.getItem("token");
       const response = await fetch(
         "http://localhost:9000/api/visitors",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify(apiData),
         }
       );

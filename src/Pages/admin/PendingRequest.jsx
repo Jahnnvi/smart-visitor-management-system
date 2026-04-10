@@ -50,7 +50,13 @@ const styles = {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("http://localhost:9000/api/visitors");
+        const token = localStorage.getItem("token");
+
+const res = await fetch("http://localhost:9000/api/visitors", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
         if (!res.ok) throw new Error("Failed to fetch visitors");
         const data = await res.json();
         // Filter only pending requests (status: "pending")
@@ -66,36 +72,58 @@ const styles = {
     }
     fetchVisitors();
   }, []);
+const handleApprove = async (visitorId) => {
+  try {
+    const token = localStorage.getItem("token");
 
-  // Approve handler
-  const handleApprove = async (visitorId) => {
-    try {
-      const res = await fetch(`http://localhost:9000/api/visitors/${visitorId}/status`, {
+    const res = await fetch(
+      `http://localhost:9000/api/visitors/${visitorId}/status`,
+      {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // ✅ FIX
+        },
         body: JSON.stringify({ status: "approved" }),
-      });
-      if (!res.ok) throw new Error("Failed to approve request");
-      setRequests((prev) => prev.filter((r) => r.visitorId !== visitorId));
-    } catch (err) {
-      alert("Error approving request: " + (err.message || "Unknown error"));
-    }
-  };
+      }
+    );
 
-  // Reject handler
-  const handleDeny = async (visitorId) => {
-    try {
-      const res = await fetch(`http://localhost:9000/api/visitors/${visitorId}/status`, {
+    if (!res.ok) throw new Error("Failed to approve request");
+
+    setRequests((prev) =>
+      prev.filter((r) => r.visitorId !== visitorId)
+    );
+  } catch (err) {
+    alert("Error approving request: " + (err.message || "Unknown error"));
+  }
+};
+
+// Reject handler
+const handleDeny = async (visitorId) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(
+      `http://localhost:9000/api/visitors/${visitorId}/status`,
+      {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // ✅ FIX
+        },
         body: JSON.stringify({ status: "rejected" }),
-      });
-      if (!res.ok) throw new Error("Failed to reject request");
-      setRequests((prev) => prev.filter((r) => r.visitorId !== visitorId));
-    } catch (err) {
-      alert("Error rejecting request: " + (err.message || "Unknown error"));
-    }
-  };
+      }
+    );
+
+    if (!res.ok) throw new Error("Failed to reject request");
+
+    setRequests((prev) =>
+      prev.filter((r) => r.visitorId !== visitorId)
+    );
+  } catch (err) {
+    alert("Error rejecting request: " + (err.message || "Unknown error"));
+  }
+};
 
   const badgeBase = {
     padding: "4px 12px",

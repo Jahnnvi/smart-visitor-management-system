@@ -210,6 +210,7 @@ export default function GuestLogin() {
       const data = await res.json();
 
       if (data.success) {
+        localStorage.setItem("token", data.token);   
       localStorage.setItem("loginRole", "guest");
       localStorage.setItem("guestEmail", email);
       
@@ -260,9 +261,11 @@ async function handleFacultyLogin(e) {
     const data = await res.json();
 
     if (data.success) {
+      localStorage.setItem("token", data.token);   
       localStorage.setItem("loginRole", "faculty");
       localStorage.setItem("facultyId", facultyId);
-
+  localStorage.setItem("facultyName", data.faculty.name);
+  localStorage.setItem("facultyEmail", data.faculty.email);
       login();
 
       navigate("/guest", {

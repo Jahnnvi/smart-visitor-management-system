@@ -13,6 +13,17 @@ const { sendApprovalEmail } = require("../utils/emailService");
         console.log("❌ No body received");
         return res.status(400).json({ message: "No data received" });
         }
+
+        // identity from jwt
+    if (req.user.role === "guest") {
+      req.body.guestEmail = req.user.email;
+    }
+
+    if (req.user.role === "faculty") {
+      req.body.facultyId = req.user.facultyId;
+      req.body.facultyEmail = req.user.email;
+    }
+
         if (req.body.guestEmail) {
   req.body.guestEmail = req.body.guestEmail.trim().toLowerCase();
 }
@@ -83,7 +94,7 @@ const { sendApprovalEmail } = require("../utils/emailService");
     today.setHours(0, 0, 0, 0);
 console.log("Searching email:", email);
     const visitors = await Visitor.find({
-      guestEmail: email,
+      guestEmail: { $regex: new RegExp(`^${email}$`, "i") },
       visitDate: {
         $gte: today,
       },

@@ -38,6 +38,7 @@ const SecurityLogin = () => {
     const data = await res.json();
 
     if (data.success) {
+      localStorage.setItem("token", data.token);   
       login({ role: "guard", guardId }); // optional: store role
       navigate("/security/dashboard");
     } else {

@@ -114,24 +114,46 @@ useEffect(() => {
 const role = localStorage.getItem("loginRole");
       let url = "";
 
-      if (role === "faculty") {
-        url = `http://localhost:9000/api/visitors/faculty/${facultyId}`;
-      } else if (role === "guest" ) {
-        url = `http://localhost:9000/api/visitors/guest/${guestEmail}`;
-      } else {
-        setError("Login required");
-        setLoading(false);
-        return;
-      }
-      // ✅ now safe to log
-      console.log("Role:", role);
-      console.log("FacultyId:", facultyId);
-      console.log("GuestEmail:", guestEmail);
-      console.log("URL:", url);
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch data");
+      // if (role === "faculty") {
+      //   url = `http://localhost:9000/api/visitors/faculty/${facultyId}`;
+      // } else if (role === "guest" && guestEmail) {
+      //   url = `http://localhost:9000/api/visitors/guest/${guestEmail}`;
+      // } else {
+      //   setError("Login required");
+      //   setLoading(false);
+      //   return;
+      // }
+      // // ✅ now safe to log
+      // console.log("Role:", role);
+      // console.log("FacultyId:", facultyId);
+      // console.log("GuestEmail:", guestEmail);
+      // console.log("URL:", url);
+      // const res = await fetch(url);
+      // if (!res.ok) throw new Error("Failed to fetch data");
+
+      const token = localStorage.getItem("token");
+
+if (role === "faculty") {
+  url = `http://localhost:9000/api/visitors/faculty/${facultyId}`;
+} else if (role === "guest") {
+  url = `http://localhost:9000/api/visitors/guest/me`; // ✅ FIXED
+} else {
+  setError("Login required");
+  setLoading(false);
+  return;
+}
+
+const res = await fetch(url, {
+  headers: {
+    Authorization: `Bearer ${token}`, // ✅ REQUIRED
+  },
+});
+if (!res.ok) {
+  throw new Error("Failed to fetch data");
+}
 
       const result = await res.json();
+      console.log("API RESPONSE:", result);
       setRequests(result.data || []);
 
     } catch (err) {
