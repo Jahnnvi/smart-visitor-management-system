@@ -39,9 +39,16 @@ if (!email) {
     try {
       setLoading(true);
 
-          const res = await fetch(
-      `http://localhost:9000/api/visitors/guest/${email}`
-    );
+          const token = localStorage.getItem("token");
+
+const res = await fetch(
+  `http://localhost:9000/api/visitors/guest/${email}`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
       const data = await res.json();
 
       if (!res.ok || !data.success) {

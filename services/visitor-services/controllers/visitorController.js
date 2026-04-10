@@ -81,7 +81,7 @@ const { sendApprovalEmail } = require("../utils/emailService");
         // GET requests by guest email (TODAY + FUTURE)
        exports.getRequestsByEmail = async (req, res) => {
   try {
-    const email = req.user.email.toLowerCase();// 🔥 FIX
+    const email = (req.params.email || req.user.email).toLowerCase();
     // // 🔐 SECURITY CHECK (VERY IMPORTANT)
     // if (req.user.role !== "admin" && req.user.email !== email) {
     //   return res.status(403).json({

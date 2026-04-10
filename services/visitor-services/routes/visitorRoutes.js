@@ -20,7 +20,7 @@ const {
 router.post("/", authMiddleware, createVisitorRequest);
 
 // POST - Walk-in visitor
-router.post("/walkin",allowRoles("security"), createWalkInVisitor);
+router.post("/walkin", authMiddleware, allowRoles("security"), createWalkInVisitor);
 
 // GET - All visitors
 router.get("/", authMiddleware, allowRoles("admin"), getAllRequests);
@@ -43,6 +43,8 @@ router.post("/:visitorId/checkin",  authMiddleware,allowRoles("security"),checkI
 // Check-out
 router.put("/:visitorId/checkout", authMiddleware,allowRoles("security"), checkOutVisitor);
 
+// Security/Admin (search by email)
+router.get("/guest/:email", authMiddleware, allowRoles("security", "admin"), getRequestsByEmail);
 // Update status
 router.put("/:visitorId/status",authMiddleware,allowRoles("admin"), updateVisitorStatus);
 

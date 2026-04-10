@@ -16,7 +16,12 @@ export default function GateLogs() {
   async function fetchTodayLogs() {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:9000/api/visitors/logs/today");
+      const token = localStorage.getItem("token");  
+      const res = await fetch("http://localhost:9000/api/visitors/logs/today", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await res.json();
 
       if (!res.ok || !data.success) {
@@ -174,12 +179,15 @@ export default function GateLogs() {
   async function handleCheckout(visitorId) {
     try {
       setLoading(true);
-
+      const token = localStorage.getItem("token");  
       const res = await fetch(
         `http://localhost:9000/api/visitors/${visitorId}/checkout`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 

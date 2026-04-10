@@ -46,9 +46,14 @@ export default function OnSpotEntry() {
     setLoading(true);
 
     try {
+
+      const token = localStorage.getItem("token");  
       const response = await fetch("http://localhost:9000/api/visitors/walkin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,   // 🔥 ADD THIS
+  },
         body: JSON.stringify({
           visitorName,
           phone,
