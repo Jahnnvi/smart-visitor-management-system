@@ -10,16 +10,16 @@ export default function VerifyVisitor() {
     border: "#E5E4E3",
   };
 
-  // This input is now used as EMAIL ADDRESS
   const [visitorEmail, setVisitorEmail] = useState("");
-  const [requestId, setRequestId] = useState(""); // kept for UI only
-
-  const [requests, setRequests] = useState([]); // list of requests for today
+  const [requestId, setRequestId] = useState("");
+  const [requests, setRequests] = useState([]);
   const [selectedVisitorId, setSelectedVisitorId] = useState("");
-
-  const [visitor, setVisitor] = useState(null); // selected request details
+  const [visitor, setVisitor] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Helper to get token
+  const getToken = () => localStorage.getItem("token");
 
   async function handleVerify(e) {
     e.preventDefault();
@@ -28,27 +28,28 @@ export default function VerifyVisitor() {
     setRequests([]);
     setSelectedVisitorId("");
 
-    
-const email = visitorEmail.trim().toLowerCase();
+    const email = visitorEmail.trim().toLowerCase();
+    if (!email) {
+      setError("Enter guest email to verify.");
+      return;
+    }
 
-if (!email) {
-  setError("Enter guest email to verify.");
-  return;
-}
+    const token = getToken();
+    if (!token) {
+      setError("No authentication token. Please log in again.");
+      return;
+    }
 
     try {
       setLoading(true);
-
-          const token = localStorage.getItem("token");
-
-const res = await fetch(
-  `http://localhost:9000/api/visitors/guest/${email}`,
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-);
+      const res = await fetch(
+        `http://localhost:9000/api/visitors/guest/${email}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const data = await res.json();
 
       if (!res.ok || !data.success) {
@@ -57,19 +58,14 @@ const res = await fetch(
       }
 
       const list = data.data || [];
-
       if (list.length === 0) {
         setError("No visitor requests found for today for this email.");
         return;
       }
 
-      // Save list, and auto-select the newest one
       setRequests(list);
       setSelectedVisitorId(list[0].visitorId);
-
-      // show details of first request
       const v = list[0];
-
       setVisitor({
         guestName: v.guestName,
         visitorId: v.visitorId,
@@ -77,18 +73,13 @@ const res = await fetch(
         purpose: v.purpose,
         assignedHost: v.facultyName || "-",
         visitDate: new Date(v.visitDate).toLocaleDateString(),
-        approvalStatus:
-          v.status === "approved"
-            ? "Approved"
-            : v.status === "checked-in"
-            ? "Checked In"
-            : "Denied",
+        approvalStatus: v.status === "approved" ? "Approved" : v.status === "checked-in" ? "Checked In" : "Denied",
         checkedIn: v.status === "checked-in",
         requestId: requestId || "-",
         raw: v,
       });
     } catch (err) {
-      setError("Backend not reachable. Is server running on port 8000?");
+      setError("Backend not reachable.");
     } finally {
       setLoading(false);
     }
@@ -96,10 +87,8 @@ const res = await fetch(
 
   function handleSelectRequest(newVisitorId) {
     setSelectedVisitorId(newVisitorId);
-
     const v = requests.find((x) => x.visitorId === newVisitorId);
     if (!v) return;
-
     setVisitor({
       guestName: v.guestName,
       visitorId: v.visitorId,
@@ -107,12 +96,7 @@ const res = await fetch(
       purpose: v.purpose,
       assignedHost: v.facultyName || "-",
       visitDate: new Date(v.visitDate).toLocaleDateString(),
-      approvalStatus:
-        v.status === "approved"
-          ? "Approved"
-          : v.status === "checked-in"
-          ? "Checked In"
-          : "Denied",
+      approvalStatus: v.status === "approved" ? "Approved" : v.status === "checked-in" ? "Checked In" : "Denied",
       checkedIn: v.status === "checked-in",
       requestId: requestId || "-",
       raw: v,
@@ -123,25 +107,29 @@ const res = await fetch(
     if (!visitor) return;
     setError("");
 
-    // must be approved to check in
     if (visitor.raw.status !== "approved") {
-      setError(
-        `Cannot check in. Visitor status is "${visitor.raw.status}". Must be approved.`
-      );
+      setError(`Cannot check in. Visitor status is "${visitor.raw.status}". Must be approved.`);
+      return;
+    }
+
+    const token = getToken();
+    if (!token) {
+      setError("No authentication token. Please log in again.");
       return;
     }
 
     try {
       setLoading(true);
-
       const res = await fetch(
         `http://localhost:9000/api/visitors/${visitor.visitorId}/checkin`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,   // ✅ Added token
+          },
         }
       );
-
       const data = await res.json();
 
       if (!res.ok || !data.success) {
@@ -149,28 +137,25 @@ const res = await fetch(
         return;
       }
 
-      // Update UI state
       setVisitor({
         ...visitor,
         approvalStatus: "Checked In",
         checkedIn: true,
         raw: { ...visitor.raw, status: "checked-in" },
       });
-
-      // Update list also so dropdown reflects checked-in
       setRequests((prev) =>
         prev.map((r) =>
-          r.visitorId === visitor.visitorId
-            ? { ...r, status: "checked-in" }
-            : r
+          r.visitorId === visitor.visitorId ? { ...r, status: "checked-in" } : r
         )
       );
     } catch (err) {
-      setError("Backend not reachable. Is server running on port 8000?");
+      setError("Backend not reachable.");
     } finally {
       setLoading(false);
     }
   }
+
+
 
   /* ---- LAYOUT STYLES (MATCH GuestRequest) ---- */
 
