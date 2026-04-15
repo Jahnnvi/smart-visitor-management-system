@@ -9,43 +9,87 @@ const auditQueue = require("../queues/auditQueue");
 // Keep email service for now (worker will use it)
 const { sendApprovalEmail, sendRejectionEmail } = require("../utils/emailService");
 
+const addJobWithLog = async (queue, data, label) => {
+  console.log(`Adding ${label} job...`);
+
+  const start = Date.now();
+
+  const job = await queue.add(data);
+
+  const end = Date.now();
+
+  console.log(`${label} job added`);
+  console.log(`Job ID:`, job.id);
+  console.log(`${label} Queue Time:`, end - start, "ms");
+
+  return job;
+};
+
 // Create a new visitor request
 exports.createVisitorRequest = async (req, res) => {
   console.log("---- CREATE VISITOR START ----");
 
   try {
     if (!req.body) {
-      console.log("❌ No body received");
       return res.status(400).json({ message: "No data received" });
     }
 
-    // identity from jwt
+    // ALWAYS set role from JWT
+    req.body.createdByRole = req.user.role;
+
+    // GUEST FLOW
     if (req.user.role === "guest") {
       req.body.guestEmail = req.user.email;
     }
+
+    // FACULTY FLOW
     if (req.user.role === "faculty") {
       req.body.facultyId = req.user.facultyId;
       req.body.facultyEmail = req.user.email;
-      req.body.facultyName = req.user.name;        // add this
-      req.body.department = req.user.department;   
+      req.body.facultyName = req.user.name;
+      req.body.department = req.user.department;
+
+      if (!req.body.guestEmail || !req.body.guestEmail.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Guest email is required",
+        });
+      }
     }
+
+    // Normalize email
     if (req.body.guestEmail) {
       req.body.guestEmail = req.body.guestEmail.trim().toLowerCase();
     }
 
-    console.log("📦 Request Body:", JSON.stringify(req.body, null, 2));
+    console.log(" Request Body:", req.body);
 
     const visitor = new Visitor(req.body);
     await visitor.validate();
-    const savedVisitor = await visitor.save();
 
-    console.log("✅ Saved Successfully:", savedVisitor.visitorId);
-    console.log("---- CREATE VISITOR END ----");
+    const savedVisitor = await visitor.save();
+    //  QUEUE: notify admin
+    await notificationQueue.add({
+      type: "new_request",
+      recipient: "admin@gmail.com",
+      message: `New visitor request from ${savedVisitor.guestName}`,
+    });
+
+    // QUEUE: audit log
+    await auditQueue.add({
+      action: "create_request",
+      userId: req.user?.id || "guest",
+      details: { visitorId: savedVisitor.visitorId },
+    });
+
+ 
+
 
     res.status(201).json({
       success: true,
       data: savedVisitor,
     });
+
   } catch (error) {
     console.log("🔥 CREATE VISITOR FAILED", error);
     res.status(400).json({
@@ -54,7 +98,6 @@ exports.createVisitorRequest = async (req, res) => {
     });
   }
 };
-
 // Get all visitor requests sorted by newest first
 exports.getAllRequests = async (req, res) => {
   try {
@@ -149,17 +192,16 @@ exports.updateVisitorStatus = async (req, res) => {
         message: "Visitor not found",
       });
     }
-
-    // --- QUEUE INTEGRATION ---
+    console.log(" Adding notification job...");
+        // --- QUEUE INTEGRATION ---
     if (status === "approved" && updatedVisitor.guestEmail) {
-      // 1. Notification queue (email)
-      await notificationQueue.add({
+      await addJobWithLog(notificationQueue, {
         type: "approval",
         recipient: updatedVisitor.guestEmail,
         subject: "Visit Approved",
         message: `Your visit on ${updatedVisitor.visitDate} has been approved.`,
         visitorDetails: updatedVisitor,
-      });
+      }, "Notification");
 
       // 2. Expiry queue (auto-expire at end of visit day)
       const expiryTime = new Date(updatedVisitor.visitDate);
@@ -168,6 +210,8 @@ exports.updateVisitorStatus = async (req, res) => {
       if (delay > 0) {
         await expiryQueue.add({ visitorId }, { delay });
       }
+    
+    
 
       // 3. Audit queue
       await auditQueue.add({

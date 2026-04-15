@@ -30,7 +30,10 @@ const fetchLogs = async () => {
   }
 };
 
-fetchLogs();
+useEffect(() => {
+  fetchLogs();
+}, []);
+
 
 const styles = {
   page: {

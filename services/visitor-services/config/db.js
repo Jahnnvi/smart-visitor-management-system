@@ -3,7 +3,7 @@
     const connectDB = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
-        console.log("✅ Auth DB Connected");
+        console.log("✅ Visitor-services DB Connected");
     } catch (error) {
         console.error("❌ DB Error:", error.message);
         process.exit(1);

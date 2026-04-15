@@ -164,62 +164,74 @@ export default function GuestRequest() {
   }
 
   async function handleSubmit(e) {
-    e.preventDefault();
-    setShowNotice(false);
-    setMessage({ type: "", text: "" });
+  e.preventDefault();
+  setShowNotice(false);
+  setMessage({ type: "", text: "" });
 
+  // ✅ Guest email validation (VERY IMPORTANT)
+  if (!guestForm.guestEmail.trim()) {
+    setMessage({ type: "error", text: "Guest email is required" });
+    return;
+  }
 
-    if (
-      loginType === "faculty" &&
-      (!facultyId.trim() || !facultyName.trim())
-    ) {
+  // ✅ Faculty validation (only UI-level, optional)
+  if (loginType === "faculty") {
+    if (!facultyId.trim() || !facultyName.trim()) {
       setShowNotice(true);
       return;
     }
-
-    try {
-      setLoading(true);
-
-      const apiData = {
-        createdByRole: loginType,
-      //   facultyName: loginType === "faculty" ? localStorage.getItem("facultyName") : undefined,
-      // facultyEmail: loginType === "faculty" ? localStorage.getItem("facultyEmail") : undefined,
-      // facultyId: loginType === "faculty" ? localStorage.getItem("facultyId") : undefined,
-      //   department:
-      //     loginType === "faculty" ? facultyDepartment : undefined,
-        guestName: guestForm.guestName,
-        // guestEmail:loginType === "guest"? localStorage.getItem("guestEmail"): guestForm.guestEmail,
-        guestPhone: guestForm.guestPhone,
-        // organization: "",
-        purpose: guestForm.purpose,
-        visitDate: guestForm.visitDate,
-      };
-const token = localStorage.getItem("token");
-      const response = await fetch(
-        "http://localhost:9000/api/visitors",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify(apiData),
-        }
-      );
-
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.message || "Failed to submit");
-
-      setMessage({
-        type: "success",
-        text: "Request submitted successfully!",
-      });
-
-      setGuestForm(initialGuestForm);
-    } catch (error) {
-      setMessage({ type: "error", text: error.message });
-    } finally {
-      setLoading(false);
-    }
   }
+
+  try {
+    setLoading(true);
+
+    const apiData = {
+      createdByRole: loginType,
+
+      guestName: guestForm.guestName,
+
+      // ✅ KEY FIX (this is already correct)
+      guestEmail:
+        loginType === "guest"
+          ? localStorage.getItem("guestEmail")
+          : guestForm.guestEmail,
+
+      guestPhone: guestForm.guestPhone,
+      purpose: guestForm.purpose,
+      visitDate: guestForm.visitDate,
+    };
+
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      "http://localhost:9000/api/visitors",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(apiData),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.message || "Failed to submit");
+
+    setMessage({
+      type: "success",
+      text: "Request submitted successfully!",
+    });
+
+    setGuestForm(initialGuestForm);
+
+  } catch (error) {
+    setMessage({ type: "error", text: error.message });
+  } finally {
+    setLoading(false);
+  }
+}
 
   return (
     <div style={styles.page}>
